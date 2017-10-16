@@ -1,7 +1,8 @@
-import os
+import wx
 from LaunchBox2AEL import generate_launchers, generate_platform_folders, generate_game_resources, LBDATADIR
 from file_utils import absolute_path, extract_path_parts, rename_files, delete_file
 ##
+
 launchers = generate_launchers(absolute_path([LBDATADIR, 'Platforms.xml'], mode='os'))
 platform_folders = generate_platform_folders(absolute_path([LBDATADIR, 'Platforms.xml'], mode='os'))
 duplicate_resources = {}
@@ -26,6 +27,8 @@ for launcher, launcher_dict in launchers.iteritems():
                     file_properties[f] = (platform_name, resource_type, game_name)
 possible_platforms = sorted(list(possible_platforms))
 possible_resource_types = sorted(list(possible_resource_types))
+
+
 ##
 def move_element_list(element, elements_list, move=-1):
     result = list(elements_list)
@@ -52,7 +55,7 @@ def regenerate_numbers_ordered_files(files):
 # negative numbers increase priority by changing the file name:
 #   eg. a-03.jpg would be renamed to a-02.jpg
 def reprioritize_resource(resource, move=-1, delete=False):
-    #TODO better exception if the resource does not exist
+    # TODO better exception if the resource does not exist
     try:
         platform_name, resource_type, game_name = file_properties[resource]
         old_list = duplicate_resources[(platform_name, resource_type)][game_name]
@@ -97,8 +100,6 @@ def get_list_to_check(chosen_platform, chosen_resource_type):
             result[(chosen_platform, chosen_resource_type, game)] = resources
     return result
 ##
-import wx
-
 def generate_image(path=None, maxW=None, maxH=None, highlight=False):
     if path:
         try:
@@ -111,86 +112,63 @@ def generate_image(path=None, maxW=None, maxH=None, highlight=False):
             else:
                 NewH = maxW
                 NewW = maxW * W / H
-            img = img.Scale(NewW,NewH)
+            img = img.Scale(NewW, NewH)
             if highlight:
                 img = img.AdjustChannels(2.0, 2.0, 2.0)
         except:
-            img = wx.EmptyImage(maxW,maxW)
+            img = wx.EmptyImage(maxW, maxW)
     else:
-        img = wx.EmptyImage(maxW,maxW)
+        img = wx.EmptyImage(maxW, maxW)
 
     return img
 ##
 
-class PreviewWindow(wx.ScrolledWindow):
+class PreviewPanel(wx.Panel):
     def __init__(self, parent):
         self.parent = parent
-        wx.ScrolledWindow.__init__(self, parent, -1, style=wx.TAB_TRAVERSAL)
+        wx.Panel.__init__(self, parent=parent)
 
         # preferences
-        self.PreviewMaxSize = 300
-        self.PreviewGridSize = (3,3)
+        self.PreviewMaxSize = 400
+        self.PreviewGridSize = (3, 3)
 
         # elements
-        self._gb = wx.GridBagSizer(vgap=0, hgap=3)
         self._preview_image = self.generate_static_bitmap(maxW=self.PreviewMaxSize, maxH=self.PreviewMaxSize)
 
         # add fixed elements to the grid
-        self._gb.Add(self._preview_image, (0,0), self.PreviewGridSize)
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer.Add(self._preview_image, 0, wx.EXPAND)
 
-        self.SetSizer(self._gb)
-        fontsz = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT).GetPixelSize()
-        self.SetScrollRate(fontsz.x, fontsz.y)
-        self.EnableScrolling(True,True)
+        self.SetSizer(self.sizer)
 
     def generate_static_bitmap(self, path='', maxW=100, maxH=100, highlight=False):
         img = generate_image(path, maxW, maxH, highlight)
         img_ctrl = wx.StaticBitmap(self, wx.ID_ANY, wx.BitmapFromImage(img))
         return img_ctrl
 
-    def OnInnerSizeChanged(self):
-        w,h = self._gb.GetMinSize()
-        self.SetVirtualSize((w,h))
+    def change_preview_image(self, path):
+        self._preview_image.SetBitmap(wx.BitmapFromImage(generate_image(path, self.PreviewMaxSize, self.PreviewMaxSize)))
 
-class AScrolledWindow(wx.ScrolledWindow):
-    def __init__(self, parent):
+
+class ScrolledImagesGrid(wx.ScrolledWindow):
+    def __init__(self, parent, handler):
         self.parent = parent
-        wx.ScrolledWindow.__init__(self, parent, -1, style=wx.TAB_TRAVERSAL)
-
-        # preferences
+        self.handler = handler
         self.PhotoMaxSize = 100
-        self.PreviewMaxSize = 300
-        self.PreviewGridSize = (3,3)
+        wx.ScrolledWindow.__init__(self, parent, -1, style=wx.TAB_TRAVERSAL)
         self._selected_file = None
         self._selected_row = None
-        self.chosen_platform = 'MS-DOS'
-        self.chosen_resource_type = 'Screenshot - Gameplay'
 
         # elements
         self._gb = wx.GridBagSizer(vgap=0, hgap=3)
-        self._combo_platforms = wx.Choice(parent, choices=sorted(list(possible_platforms)))
-        self._combo_resource_types = wx.Choice(parent, choices=sorted(list(possible_resource_types)))
-        self._row_images = {}
-        self._preview_image = self.generate_static_bitmap(maxW=self.PreviewMaxSize, maxH=self.PreviewMaxSize)
-        self._preview_image_path = None
 
         # add fixed elements to the grid
-        self._gb.Add(self._combo_platforms, (0,0), (1,1))
-        self._gb.Add(self._combo_resource_types, (0,1), (1,1))
-        self._gb.Add(self._preview_image, (1,0), self.PreviewGridSize)
-        self._combo_platforms.Bind(wx.EVT_CHOICE, self.onChoice)
-        self._combo_resource_types.Bind(wx.EVT_CHOICE, self.onChoice)
-        self.parent.CreateStatusBar()
-        self.parent.SetStatusText("Welcome to wxPython!")
-
+        self._row_images = {}
         self.generate_grid_images()
-
         self.SetSizer(self._gb)
         fontsz = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT).GetPixelSize()
         self.SetScrollRate(fontsz.x, fontsz.y)
         self.EnableScrolling(True,True)
-        self.make_menu_bar()
-
 
     def generate_static_bitmap(self, path='', maxW=100, maxH=100, highlight=False):
         img = generate_image(path, maxW, maxH, highlight)
@@ -203,23 +181,23 @@ class AScrolledWindow(wx.ScrolledWindow):
             img_ctrl.Unbind(wx.EVT_LEFT_DOWN)
         except:
             pass
-        img_ctrl.Bind(wx.EVT_MOTION, lambda event:self.onMouseOver(event, path))
-        img_ctrl.Bind(wx.EVT_LEFT_DOWN, lambda event:self.onMouseClick(event, path, row))
+        img_ctrl.Bind(wx.EVT_MOTION, lambda event: self.onMouseOver(event, path))
+        img_ctrl.Bind(wx.EVT_LEFT_DOWN, lambda event: self.onMouseClick(event, path, row))
         return img_ctrl
-
 
     def replace_img_ctrl_path(self, img_ctrl, path, row, highlight=False):
         img_ctrl.SetBitmap(wx.BitmapFromImage(generate_image(path, maxW=self.PhotoMaxSize, maxH=self.PhotoMaxSize, highlight=highlight)))
         img_ctrl = self.generate_static_bitmap_events(img_ctrl, path, row)
         return img_ctrl
 
-    def replace_row_images(self, row, col, files):
+    def replace_row_images(self, row, files):
         try:
             existing_imgs = self._row_images[row]
         except:
             self._row_images[row] = []
             existing_imgs = []
 
+        col = 0
         for img_ctrl, f in zip(existing_imgs, files):
             highlight = f == self._selected_file
             self.replace_img_ctrl_path(img_ctrl, f, row, highlight=highlight)
@@ -229,31 +207,30 @@ class AScrolledWindow(wx.ScrolledWindow):
             highlight = image_path == self._selected_file
             img_ctrl = self.generate_static_bitmap(image_path, highlight=highlight)
             img_ctrl = self.generate_static_bitmap_events(img_ctrl, image_path, row)
-            self._gb.Add(img_ctrl, (row,col), (1,1))
+            self._gb.Add(img_ctrl, (row, col), (1 ,1))
             self._row_images[row].append(img_ctrl)
             col += 1
-        
+
         for img_ctrl in existing_imgs[len(files):]:
             del self._row_images[row][-1]
             img_ctrl.Destroy()
 
-
     def generate_grid_images(self):
         # loop to create images
-        row_number = 1
-        for key, images_row in get_list_to_check(self.chosen_platform, self.chosen_resource_type).iteritems():
+        handler = self.handler
+        row_number = 0
+        for key, images_row in get_list_to_check(handler.chosen_platform, handler.chosen_resource_type).iteritems():
             platform, resource_type, game = key
-            col_number = self.PreviewGridSize[1]
-            self.replace_row_images(row_number, col_number, images_row)
+            col_number = 0
+            self.replace_row_images(row_number, images_row)
             row_number += 1
 
         # it there were more, just delete them
         while row_number in self._row_images:
-            self.replace_row_images(row_number, col_number, [])
+            self.replace_row_images(row_number, [])
             row_number += 1
 
         self.OnInnerSizeChanged()
-
 
     def get_current_img_ctrl(self):
         path = self._selected_file
@@ -262,6 +239,71 @@ class AScrolledWindow(wx.ScrolledWindow):
         pos = images_row.index(path)
         row_number = self._selected_row
         return self._row_images[row_number][pos]
+
+    def OnInnerSizeChanged(self):
+        w, h = self._gb.GetMinSize()
+        self.SetVirtualSize((w, h))
+
+    def onMouseOver(self, event, path):
+        handler = self.handler
+        if path != handler._preview_image_path:
+            handler.SetStatusText(path)
+            handler.change_preview_image(path)
+
+    def onMouseClick(self, event, path, row_number):
+        # remove hightlight of current marked file
+        if self._selected_file:
+            self.replace_img_ctrl_path(
+                    self.get_current_img_ctrl(),
+                    self._selected_file,
+                    self._selected_row,
+                    highlight=False)
+
+        self._selected_file = path
+        self._selected_row = row_number
+        platform_name, resource_type, game_name = file_properties[path]
+        images_row = duplicate_resources[(platform_name, resource_type)][game_name]
+        self.replace_row_images(row_number, images_row)
+
+
+class TestFrame(wx.Frame):
+    def __init__(self):
+        # preferences
+        wx.Frame.__init__(self, None, -1, 'Programmatic size change')
+        self.PhotoMaxSize = 100
+        self.PreviewMaxSize = 300
+        self.chosen_platform = 'MS-DOS'
+        self.chosen_resource_type = 'Screenshot - Gameplay'
+
+        # elements
+        self._combo_platforms = wx.Choice(self, choices=sorted(list(possible_platforms)))
+        self._combo_resource_types = wx.Choice(self, choices=sorted(list(possible_resource_types)))
+        self._preview_image_path = None
+
+        # add elements of the app
+        self.splitter = wx.SplitterWindow(self)
+        self.preview_img = PreviewPanel(self.splitter)
+        self.preview_img.SetMaxSize((400, -1))
+        self.grid_img = ScrolledImagesGrid(self.splitter, self)
+        self.splitter.SplitVertically(self.preview_img, self.grid_img)
+        self.splitter.SetMinimumPaneSize(300)
+        szh = wx.BoxSizer(wx.HORIZONTAL)
+        szv = wx.BoxSizer(wx.VERTICAL)
+        szh.Add(self._combo_platforms, 1, wx.EXPAND)
+        szh.Add(self._combo_resource_types, 1, wx.EXPAND)
+        szv.Add(szh, 0, wx.EXPAND)
+        szv.Add(self.splitter, 1, wx.EXPAND)
+
+        # add event handlers
+        self._combo_platforms.Bind(wx.EVT_CHOICE, self.onChoice)
+        self._combo_resource_types.Bind(wx.EVT_CHOICE, self.onChoice)
+        self.splitter.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED, self.onSashDrag)
+        self.CreateStatusBar()
+        self.SetStatusText("Welcome to wxPython!")
+
+        # set up everything
+        self.make_menu_bar()
+        self.SetSizer(szv)
 
     def make_menu_bar(self):
         # Make a file menu with reprioritize and delete buttons
@@ -283,35 +325,31 @@ class AScrolledWindow(wx.ScrolledWindow):
         menuBar.Append(file_menu, "&File")
 
         # Give the menu bar to the frame
-        self.parent.SetMenuBar(menuBar)
+        self.SetMenuBar(menuBar)
 
         # Finally, associate a handler function with the EVT_MENU event for
         # each of the menu items. That means that when that menu item is
         # activated then the associated handler function will be called.
-        self.parent.Bind(wx.EVT_MENU, self.move_left_current_file, move_left_item)
-        self.parent.Bind(wx.EVT_MENU, self.move_right_current_file, move_right_item)
-        self.parent.Bind(wx.EVT_MENU, self.delete_current_file, delete_item)
-        self.parent.Bind(wx.EVT_MENU, self.onExit, exit_item)
+        self.Bind(wx.EVT_MENU, self.move_left_current_file, move_left_item)
+        self.Bind(wx.EVT_MENU, self.move_right_current_file, move_right_item)
+        self.Bind(wx.EVT_MENU, self.delete_current_file, delete_item)
+        self.Bind(wx.EVT_MENU, self.onExit, exit_item)
 
-    def onChoice(self, event):
-        self.chosen_platform = self._combo_platforms.GetString(self._combo_platforms.GetSelection())
-        self.chosen_resource_type = self._combo_resource_types.GetString(self._combo_resource_types.GetSelection())
-        self.generate_grid_images()
-        self.OnInnerSizeChanged()
+    def change_preview_image(self, path):
+        self.preview_img.change_preview_image(path)
 
     def change_current_file(self, move=-1, delete=False):
-        if self._selected_file is None:
+        if self.grid_img._selected_file is None:
             wx.MessageBox("Select a file first")
             return False
         else:
-            path = self._selected_file
+            path = self.grid_img._selected_file
             platform_name, resource_type, game_name = file_properties[path]
-            row_number = self._selected_row
-            col_number = self.PreviewGridSize[1]
+            row_number = self.grid_img._selected_row
             new_filename = reprioritize_resource(path, move=move, delete=delete)
-            self._selected_file = new_filename
+            self.grid_img._selected_file = new_filename
             images_row = duplicate_resources[(platform_name, resource_type)][game_name]
-            self.replace_row_images(row_number, col_number, images_row)
+            self.grid_img.replace_row_images(row_number, images_row)
 
     def move_left_current_file(self, event):
         self.change_current_file(move=-1, delete=False)
@@ -322,43 +360,20 @@ class AScrolledWindow(wx.ScrolledWindow):
     def delete_current_file(self, event):
         self.change_current_file(move=0, delete=True)
 
-    def OnInnerSizeChanged(self):
-        w,h = self._gb.GetMinSize()
-        self.SetVirtualSize((w,h))
+    def onSashDrag(self, event):
+        preview_pane_size = self.splitter.GetSashPosition()
+        self.preview_img.PreviewMaxSize = preview_pane_size - 10
+        # force regenerating the preview image
+        self.change_preview_image(self._preview_image_path)
 
-    def onMouseOver(self, event, path):
-        if path != self._preview_image_path:
-            self.parent.SetStatusText(path)
-            self._preview_image.SetBitmap(wx.BitmapFromImage(generate_image(path, self.PreviewMaxSize, self.PreviewMaxSize)))
-
-    def onMouseClick(self, event, path, row_number):
-        # remove hightlight of current marked file
-        if self._selected_file:
-            self.replace_img_ctrl_path(
-                    self.get_current_img_ctrl(),
-                    self._selected_file,
-                    self._selected_row,
-                    highlight=False)
-
-        self._selected_file = path
-        self._selected_row = row_number
-        col_number = self.PreviewGridSize[1]
-        platform_name, resource_type, game_name = file_properties[path]
-        images_row = duplicate_resources[(platform_name, resource_type)][game_name]
-        self.replace_row_images(row_number, col_number, images_row)
+    def onChoice(self, event):
+        self.chosen_platform = self._combo_platforms.GetString(self._combo_platforms.GetSelection())
+        self.chosen_resource_type = self._combo_resource_types.GetString(self._combo_resource_types.GetSelection())
+        self._selected_file = None
+        self.grid_img.generate_grid_images()
 
     def onExit(self, event):
-        self.parent.Close(True)
-
-
-class TestFrame(wx.Frame):
-    def __init__(self):
-        wx.Frame.__init__(self, None, -1, 'Programmatic size change')
-        sz = wx.BoxSizer(wx.VERTICAL)
-        pa = AScrolledWindow(self)
-        sz.Add(pa, 1, wx.EXPAND)
-        self.SetSizer(sz)
-
+        self.Close(True)
 
 
 if __name__ == '__main__':
