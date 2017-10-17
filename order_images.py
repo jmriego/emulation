@@ -336,6 +336,7 @@ class TestFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onExit, exit_item)
 
     def change_preview_image(self, path):
+        self._preview_image_path = path
         self.preview_img.change_preview_image(path)
 
     def change_current_file(self, move=-1, delete=False):
@@ -361,8 +362,10 @@ class TestFrame(wx.Frame):
         self.change_current_file(move=0, delete=True)
 
     def onSashDrag(self, event):
-        preview_pane_size = self.splitter.GetSashPosition()
-        self.preview_img.PreviewMaxSize = preview_pane_size - 10
+        self.splitter.UpdateSize()
+        preview_pane_size = self.splitter.GetSashPosition() - 10
+        preview_pane_size = self.splitter.GetWindow1().GetClientSize()[0]
+        self.preview_img.PreviewMaxSize = preview_pane_size
         # force regenerating the preview image
         self.change_preview_image(self._preview_image_path)
 
