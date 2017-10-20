@@ -114,7 +114,11 @@ def generate_image(path=None, maxW=None, maxH=None, highlight=False):
                 NewW = maxW * W / H
             img = img.Scale(NewW, NewH)
             if highlight:
-                img = img.AdjustChannels(2.0, 2.0, 2.0)
+                border = 5
+                rectangle = wx.EmptyImage(NewW + border*2, NewH + border*2)
+                rectangle.Replace(0,0,0,0,255,0)
+                rectangle.Paste(img, border, border)
+                img = rectangle
         except:
             img = wx.EmptyImage(maxW, maxW)
     else:
@@ -251,6 +255,8 @@ class ScrolledImagesGrid(wx.ScrolledWindow):
             handler.change_preview_image(path)
 
     def onMouseClick(self, event, path, row_number):
+        img_ctrl = event.GetEventObject()
+        pos = self._gb.GetItemPosition(img_ctrl)
         # remove hightlight of current marked file
         if self._selected_file:
             self.replace_img_ctrl_path(
@@ -264,6 +270,7 @@ class ScrolledImagesGrid(wx.ScrolledWindow):
         platform_name, resource_type, game_name = file_properties[path]
         images_row = duplicate_resources[(platform_name, resource_type)][game_name]
         self.replace_row_images(row_number, images_row)
+        self.OnInnerSizeChanged()
 
 
 class TestFrame(wx.Frame):
