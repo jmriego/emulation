@@ -2,6 +2,7 @@ import os
 import ntpath
 import fnmatch
 import re
+import unicodedata
 
 file_suffix = re.compile('-[0-9]+$')
 
@@ -46,9 +47,12 @@ def find_files(startdir, pattern, mode='win'):
     return results
 
 def clean_filename(filename, mode='win'):
-    path = get_path_library(mode)
     bad_chars = ":/'"
-    return ''.join('_' if c in bad_chars else c for c in filename)
+    filename_no_bad_chars = ''.join('_' if c in bad_chars else c for c in filename)
+    try:
+        return unicodedata.normalize('NFC', filename_no_bad_chars)
+    except TypeError:
+        return filename_no_bad_chars
 
 
 # return info from a path such as dirname, extension, etc.

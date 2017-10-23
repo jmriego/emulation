@@ -1,5 +1,6 @@
+from __future__ import print_function
 import wx
-from LaunchBox2AEL import generate_launchers, generate_platform_folders, generate_game_resources, LBDATADIR
+from LaunchBox2AEL import generate_launchers, generate_platform_folders, generate_game_resources, LBDATADIR, generate_data, get_game_resources, folder_resource_types
 from file_utils import absolute_path, extract_path_parts, rename_files, delete_file
 ##
 
@@ -325,6 +326,9 @@ class TestFrame(wx.Frame):
         delete_item = file_menu.Append(-1, "&Delete selected file\tCtrl-D",
                 "Delete the selected file from disk")
         file_menu.AppendSeparator()
+        export_item = file_menu.Append(-1, "&Export CSV found resources\tCtrl-S",
+                "Export a list of games and the resources found for them")
+        file_menu.AppendSeparator()
         exit_item = file_menu.Append(wx.ID_EXIT)
 
         # Make the menu bar and add the two menus to it. The '&' defines the mnemonic
@@ -340,6 +344,7 @@ class TestFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.move_left_current_file, move_left_item)
         self.Bind(wx.EVT_MENU, self.move_right_current_file, move_right_item)
         self.Bind(wx.EVT_MENU, self.delete_current_file, delete_item)
+        self.Bind(wx.EVT_MENU, self.OnSaveAs, export_item)
         self.Bind(wx.EVT_MENU, self.onExit, exit_item)
 
     def change_preview_image(self, path):
@@ -375,6 +380,46 @@ class TestFrame(wx.Frame):
         self.preview_img.PreviewMaxSize = preview_pane_size
         # force regenerating the preview image
         self.change_preview_image(self._preview_image_path)
+
+    def OnSaveAs(self, event):
+        with wx.FileDialog(self, "Save CSV file", wildcard="CSV files (*.csv)|*.csv",
+                           style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as fileDialog:
+            if fileDialog.ShowModal() == wx.ID_CANCEL:
+                return     # the user changed their mind
+            # save the current contents in the file
+            pathname = fileDialog.GetPath()
+            try:
+                with open(pathname, 'w') as file:
+                    self.PrintCSVFoundResources(file)
+            except IOError:
+                wx.LogError("Cannot save current data in file '%s'." % pathname)
+
+    def PrintCSVLine(self, line, f):
+        for field in line:
+            field = field.encode('utf-8')
+            print(field, end='', file=f)
+            print(",", end='', file=f)
+        print("", file=f)
+
+    def PrintCSVFoundResources(self, f):
+        resource_types = list(folder_resource_types.keys())
+        # print header
+        header = ['platform', 'game'] + resource_types
+        self.PrintCSVLine(header, f)
+
+        # generate lines with games and their number of resources found by type
+        platform_folders = generate_platform_folders(absolute_path([LBDATADIR, 'Platforms.xml'], mode='os'))
+        categories, launchers, games = generate_data()
+        for launcher, launcher_dict in launchers.iteritems():
+            game_resources = generate_game_resources(platform_folders[launcher_dict['platform']])
+            for game_id, game_details in games[launcher].iteritems():
+                m_name = game_details['m_name']
+                line = [launcher_dict['platform'], m_name]
+                for resource_type in resource_types:
+                    resource_folders = folder_resource_types[resource_type]
+                    line.append(str(len(get_game_resources(m_name, game_resources, resource_folders))))
+
+                self.PrintCSVLine(line, f)
 
     def onChoice(self, event):
         self.chosen_platform = self._combo_platforms.GetString(self._combo_platforms.GetSelection())

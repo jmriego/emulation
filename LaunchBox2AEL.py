@@ -27,8 +27,8 @@ folder_resource_types = {
   's_boxfront': ['Box - Front'],
   's_cartridge': ['Cart - Front', 'Cart - 3D', 'Cart - Back'],
   's_clearlogo': ['Clear Logo'],
-  's_fanart': ['Fanart'],
-  's_flyer': ['Flyer - Front', 'Flyer - Back'],
+  's_fanart': ['Fanart - Background'],
+  's_flyer': ['Advertisement Flyer - Front', 'Advertisement Flyer - Back'],
   's_snap': ['Screenshot - Gameplay'],
   's_title': ['Screenshot - Game Title'],
   's_manual': ['Manual'],
@@ -44,6 +44,24 @@ def get_attribute_cdata(node, attribute, default=''):
     except:
         result = default
     return result if result else default
+
+
+def unique_everseen(iterable, key=None):
+    "List unique elements, preserving order. Remember all elements ever seen."
+    # unique_everseen('AAAABBBCCDAABBB') --> A B C D
+    # unique_everseen('ABBCcAD', str.lower) --> A B C D
+    seen = set()
+    seen_add = seen.add
+    if key is None:
+        for element in filterfalse(seen.__contains__, iterable):
+            seen_add(element)
+            yield element
+    else:
+        for element in iterable:
+            k = key(element)
+            if k not in seen:
+                seen_add(k)
+                yield element
 
 
 def generate_categories(platforms_xml):
@@ -265,25 +283,33 @@ def generate_game_resources(folders):
     return resources
 
 
+def get_game_resources(game_name, game_resources, resource_folders):
+    game_title_clean = clean_filename(game_name)
+    possible_images = []
+    for folder in resource_folders:
+        try:
+            possible_images.extend(game_resources[game_title_clean][folder])
+        except KeyError:
+            pass
+    return possible_images
+
+
 def add_game_resources(games, game_resources):
     for game_id, game_data in games.iteritems():
         for resource_type, resource_folders in folder_resource_types.iteritems():
-            game_title_clean = clean_filename(game_data['m_name'])
-            possible_images = []
-            for folder in resource_folders:
-                try:
-                    possible_images.extend(game_resources[game_title_clean][folder])
-                except:
-                    pass
+            possible_images = get_game_resources(game_data['m_name'], game_resources, resource_folders)
             try:
                 chosen_image = possible_images[0]
             except:
                 chosen_image = ''
-            games[game_id][resource_type] = chosen_image
-    return games
+            try:
+                games[game_id][resource_type] = chosen_image
+            except KeyError:
+                games [game_id] = {}
+                games[game_id][resource_type] = chosen_image
 
 ## Main code
-def write_files():
+def generate_data():
     categories = generate_categories(os.path.join(LBDATADIR, 'Platforms.xml'))
     launchers = generate_launchers(os.path.join(LBDATADIR, 'Platforms.xml'))
     platform_folders = generate_platform_folders(os.path.join(LBDATADIR, 'Platforms.xml'))
@@ -292,8 +318,11 @@ def write_files():
     for launcher, launcher_dict in launchers.iteritems():
         game_resources = generate_game_resources(platform_folders[launcher_dict['platform']])
         games[launcher] = generate_games(launcher_dict['platform'], launcher_dict['id'])
-        games[launcher] = add_game_resources(games[launcher], game_resources)
+        add_game_resources(games[launcher], game_resources)
+    return categories, launchers, games
 
+
+def write_files(categories, launchers, games):
     ###############################################
     # generate AEL categories
     ###############################################
@@ -343,4 +372,5 @@ def write_files():
         f.close()
 
 if __name__ == "__main__":
-    write_files()
+    categories, launchers, games = generate_data()
+    write_files(categories, launchers, games)
