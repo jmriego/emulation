@@ -104,8 +104,6 @@ def generate_platform_launchers(games_xml, emulators):
             launchers[emulator_id]['extensions'] = []
             launchers[emulator_id]['game_count'] = 0
         launchers[emulator_id]['game_count'] += 1
-        game_path = game_xml.ApplicationPath.cdata
-        dirname,file = path.split(game_path)
         filename,extension = path.splitext(file)
         extension = extension[1:] # remove the dot
         if dirname not in launchers[emulator_id]['paths']:
@@ -242,7 +240,7 @@ def generate_games(platform, launcher_id):
             continue
         game_id = get_attribute_cdata(game_xml, 'ID')
         result[game_id] = {}
-        for key,value in game_info.iteritems():
+        for key,value in game_info.items():
             result[game_id][key] = get_attribute_cdata(game_xml, value)
         # these values are special in some way
         result[game_id]['m_year'] = result[game_id]['m_year'][:4]
@@ -266,7 +264,7 @@ def generate_game_resources(folders):
     file_suffix = re.compile('-?[0-9]*$')
     resources = {}
     # for each pair of resource type and folder, generate all found resources
-    for folder_type, folder in folders.iteritems():
+    for folder_type, folder in folders.items():
         for f in find_files(folder, '*.*'):
             f = f.replace('\\', '/') #TODO remove this in windows
             dirname,file = path.split(f)
@@ -278,7 +276,7 @@ def generate_game_resources(folders):
                 resources[game][folder_type] = []
             resources[game][folder_type].append(f)
     for game in resources.keys():
-        for folder_type, files in resources[game].iteritems():
+        for folder_type, files in resources[game].items():
             resources[game][folder_type].sort(key=get_resource_order)
     return resources
 
@@ -295,8 +293,8 @@ def get_game_resources(game_name, game_resources, resource_folders):
 
 
 def add_game_resources(games, game_resources):
-    for game_id, game_data in games.iteritems():
-        for resource_type, resource_folders in folder_resource_types.iteritems():
+    for game_id, game_data in games.items():
+        for resource_type, resource_folders in folder_resource_types.items():
             possible_images = get_game_resources(game_data['m_name'], game_resources, resource_folders)
             try:
                 chosen_image = possible_images[0]
@@ -315,7 +313,7 @@ def generate_data():
     platform_folders = generate_platform_folders(os.path.join(LBDATADIR, 'Platforms.xml'))
 
     games = {}
-    for launcher, launcher_dict in launchers.iteritems():
+    for launcher, launcher_dict in launchers.items():
         game_resources = generate_game_resources(platform_folders[launcher_dict['platform']])
         games[launcher] = generate_games(launcher_dict['platform'], launcher_dict['id'])
         add_game_resources(games[launcher], game_resources)
@@ -333,12 +331,12 @@ def write_files(categories, launchers, games):
 
     for category in categories:
         category_xml = ET.SubElement(root, "category")
-        for key,value in category.iteritems():
+        for key,value in category.items():
             ET.SubElement(category_xml, key).text = value
 
-    for launcher_name, launcher_data in launchers.iteritems():
+    for launcher_name, launcher_data in launchers.items():
         launcher_xml = ET.SubElement(root, "launcher")
-        for key,value in launcher_data.iteritems():
+        for key,value in launcher_data.items():
             ET.SubElement(launcher_xml, key).text = value
 
     tree = ET.ElementTree(root)
@@ -349,10 +347,10 @@ def write_files(categories, launchers, games):
     ###############################################
 
     single_launcher_xml_keys = ['id', 'm_name', 'categoryID', 'platform', 'rompath', 'romext']
-    for launcher_name, launcher_data in launchers.iteritems():
+    for launcher_name, launcher_data in launchers.items():
         root = ET.Element("advanced_emulator_launcher_ROMs", version="1")
         launcher_xml = ET.SubElement(root, "launcher")
-        for key,value in launcher_data.iteritems():
+        for key,value in launcher_data.items():
             if key in single_launcher_xml_keys:
                 ET.SubElement(launcher_xml, key).text = value
         tree = ET.ElementTree(root)
@@ -364,7 +362,7 @@ def write_files(categories, launchers, games):
     # generate games JSON files per launcher
     ###############################################
 
-    for launcher, launcher_data in launchers.iteritems():
+    for launcher, launcher_data in launchers.items():
         games_data = games[launcher]
         f_rom_base_noext = os.path.join(AELDIR, 'db_ROMs', '{}.json'.format(launcher_data['roms_base_noext']))
         f = open(f_rom_base_noext, 'w')

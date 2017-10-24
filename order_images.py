@@ -13,11 +13,11 @@ possible_resource_types = set()
 possible_platforms.add('(Any)')
 possible_resource_types.add('(Any)')
 resource_to_platform_type = {}
-for launcher, launcher_dict in launchers.iteritems():
+for launcher, launcher_dict in launchers.items():
     platform_name = launcher_dict['platform']
     game_resources_platform = generate_game_resources(platform_folders[platform_name])
-    for game_name, resources in game_resources_platform.iteritems():
-        for resource_type, filelist in resources.iteritems():
+    for game_name, resources in game_resources_platform.items():
+        for resource_type, filelist in resources.items():
             if len(filelist) > 1:
                 if not (platform_name, resource_type) in duplicate_resources:
                     duplicate_resources[(platform_name, resource_type)] = {}
@@ -92,12 +92,12 @@ def get_list_to_check(chosen_platform, chosen_resource_type):
         for platform_name, resource_type in duplicate_resources.keys():
             if chosen_platform in [platform_name, '(Any)'] and chosen_resource_type in [resource_type, '(Any)']:
                 try:
-                    for game, resources in duplicate_resources[(platform_name, resource_type)].iteritems():
+                    for game, resources in duplicate_resources[(platform_name, resource_type)].items():
                         result[(platform_name, resource_type, game)] = resources
                 except:
                     pass
     else:
-        for game, resources in duplicate_resources[(chosen_platform, chosen_resource_type)].iteritems():
+        for game, resources in duplicate_resources[(chosen_platform, chosen_resource_type)].items():
             result[(chosen_platform, chosen_resource_type, game)] = resources
     return result
 ##
@@ -224,7 +224,7 @@ class ScrolledImagesGrid(wx.ScrolledWindow):
         # loop to create images
         handler = self.handler
         row_number = 0
-        for key, images_row in get_list_to_check(handler.chosen_platform, handler.chosen_resource_type).iteritems():
+        for key, images_row in get_list_to_check(handler.chosen_platform, handler.chosen_resource_type).items():
             platform, resource_type, game = key
             col_number = 0
             self.replace_row_images(row_number, images_row)
@@ -410,9 +410,9 @@ class TestFrame(wx.Frame):
         # generate lines with games and their number of resources found by type
         platform_folders = generate_platform_folders(absolute_path([LBDATADIR, 'Platforms.xml'], mode='os'))
         categories, launchers, games = generate_data()
-        for launcher, launcher_dict in launchers.iteritems():
+        for launcher, launcher_dict in launchers.items():
             game_resources = generate_game_resources(platform_folders[launcher_dict['platform']])
-            for game_id, game_details in games[launcher].iteritems():
+            for game_id, game_details in games[launcher].items():
                 m_name = game_details['m_name']
                 line = [launcher_dict['platform'], m_name]
                 for resource_type in resource_types:
