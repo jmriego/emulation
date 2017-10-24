@@ -285,7 +285,9 @@ class TestFrame(wx.Frame):
 
         # elements
         self._combo_platforms = wx.Choice(self, choices=sorted(list(possible_platforms)))
+        self._combo_platforms.SetSelection(0)
         self._combo_resource_types = wx.Choice(self, choices=sorted(list(possible_resource_types)))
+        self._combo_resource_types.SetSelection(0)
         self._preview_image_path = None
 
         # add elements of the app
