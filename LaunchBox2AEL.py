@@ -8,12 +8,11 @@ from collections import OrderedDict
 import json
 from hashlib import md5
 import time
-import pandas as pd
 
 ## REQUIRED SETTINGS !!!
 #Use forward slashes / instead of backslashes \
-LBDIR = "/Users/jvalenzuela/LaunchBox"
-AELDIR = "/Users/jvalenzuela/LaunchBox/ael/kodi"
+LBDIR = "E:/Juegos/Emulation/LaunchBox"
+AELDIR = r"C:\Users\josem\AppData\Local\Packages\XBMCFoundation.Kodi_4n2hpmxwrvr6p\LocalCache\Roaming\Kodi\userdata\addon_data\plugin.program.advanced.emulator.launcher"
 ## END REQUIRED SETTINGS !!!
 
 ## Directories inside LaunchBox
@@ -104,12 +103,12 @@ def generate_platform_launchers(games_xml, emulators):
             launchers[emulator_id]['extensions'] = []
             launchers[emulator_id]['game_count'] = 0
         launchers[emulator_id]['game_count'] += 1
-        filename,extension = path.splitext(file)
-        extension = extension[1:] # remove the dot
-        if dirname not in launchers[emulator_id]['paths']:
-            launchers[emulator_id]['paths'].append(dirname)
-        if extension not in launchers[emulator_id]['extensions']:
-            launchers[emulator_id]['extensions'].append(extension)
+        game_path = get_attribute_cdata(game_xml, 'ApplicationPath')
+        f = extract_path_parts(absolute_path([LBDIR, game_path]))
+        if f['dirname'] not in launchers[emulator_id]['paths']:
+            launchers[emulator_id]['paths'].append(f['dirname'])
+        if f['extension'] not in launchers[emulator_id]['extensions']:
+            launchers[emulator_id]['extensions'].append(f['extension'])
     return launchers
 
 
@@ -204,8 +203,7 @@ def generate_platform_folders(platforms_xml):
         media_path = get_attribute_cdata(folder_xml, 'FolderPath')
         if not platform_name in platform_folders:
             platform_folders[platform_name] = {}
-        #TODO don't replace
-        platform_folders[platform_name][media_type] = absolute_path([LBDIR, media_path]).replace('\\', '/')
+        platform_folders[platform_name][media_type] = absolute_path([LBDIR, media_path])
     return platform_folders
 
 
@@ -243,6 +241,7 @@ def generate_games(platform, launcher_id):
         for key,value in game_info.items():
             result[game_id][key] = get_attribute_cdata(game_xml, value)
         # these values are special in some way
+        result[game_id]['filename'] = absolute_path([LBDIR, result[game_id]['filename']])
         result[game_id]['m_year'] = result[game_id]['m_year'][:4]
         result[game_id]['disks'] = []
         result[game_id]['nointro_status'] = "None"
@@ -251,10 +250,9 @@ def generate_games(platform, launcher_id):
 
 def get_resource_order(f):
     file_suffix = re.compile('-?[0-9]*$')
-    filename,extension = path.splitext(f)
     try:
-        order = abs(int(file_suffix.search(filename).group(0)))
-    except ValueError:
+        order = abs(int(extract_path_parts(f, 'suffix')))
+    except TypeError:
         order = 9999
     return order
 
@@ -266,9 +264,7 @@ def generate_game_resources(folders):
     # for each pair of resource type and folder, generate all found resources
     for folder_type, folder in folders.items():
         for f in find_files(folder, '*.*'):
-            f = f.replace('\\', '/') #TODO remove this in windows
-            dirname,file = path.split(f)
-            filename,extension = path.splitext(file)
+            filename = extract_path_parts(f, 'rootname')
             game = re.sub(file_suffix, '', clean_filename(filename))
             if game not in resources:
                 resources[game] = {}
