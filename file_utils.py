@@ -46,6 +46,13 @@ def find_files(startdir, pattern, mode='win'):
         results.extend(absolute_path([base,f]) for f in goodfiles)
     return results
 
+def find_first_file(startdir, pattern, mode='win'):
+    results = find_files(startdir, pattern, mode)
+    try:
+        return results[0]
+    except IndexError:
+        return None
+
 def clean_filename(filename, mode='win'):
     bad_chars = ":/'"
     filename_no_bad_chars = ''.join('_' if c in bad_chars else c for c in filename)

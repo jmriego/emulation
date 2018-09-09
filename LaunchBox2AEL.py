@@ -1,6 +1,6 @@
 import os
 import ntpath as path
-from file_utils import absolute_path, find_files, clean_filename, extract_path_parts
+from file_utils import absolute_path, find_files, find_first_file, clean_filename, extract_path_parts
 import untangle
 from lxml import etree as ET
 import re
@@ -8,10 +8,12 @@ from collections import OrderedDict
 import json
 from hashlib import md5
 import time
+import winreg
+import shlex
 
 ## REQUIRED SETTINGS !!!
 #Use forward slashes / instead of backslashes \
-LBDIR = "E:/Juegos/Emulation/LaunchBox"
+LBDIR = r"E:\Juegos\Emulation\LaunchBox"
 AELDIR = r"C:\Users\josem\AppData\Local\Packages\XBMCFoundation.Kodi_4n2hpmxwrvr6p\LocalCache\Roaming\Kodi\userdata\addon_data\plugin.program.advanced.emulator.launcher"
 ## END REQUIRED SETTINGS !!!
 
@@ -22,12 +24,13 @@ LBIMGDIR = os.path.join(LBDIR, "Images")
 ## Prefered directories for each image type
 folder_resource_types = {
   's_banner': ['Banner', 'Steam Banner', 'Arcade - Marquee'],
+  's_flyer': ['Advertisement Flyer - Front'],
   's_boxback': ['Box - Back'],
   's_boxfront': ['Box - Front'],
   's_cartridge': ['Cart - Front', 'Cart - 3D', 'Cart - Back'],
   's_clearlogo': ['Clear Logo'],
   's_fanart': ['Fanart - Background'],
-  's_flyer': ['Advertisement Flyer - Front', 'Advertisement Flyer - Back'],
+  's_poster': ['Advertisement Flyer - Front', 'Advertisement Flyer - Back'],
   's_snap': ['Screenshot - Gameplay'],
   's_title': ['Screenshot - Game Title'],
   's_manual': ['Manual'],
@@ -75,14 +78,14 @@ def generate_categories(platforms_xml):
         category['m_plot'] = category_xml.Notes.cdata
         category['m_rating'] = ""
         category['finished'] = "False"
-        category['default_thumb'] = "s_thumb"
+        category['default_thumb'] = "s_icon"
         category['default_fanart'] = "s_fanart"
         category['default_banner'] = "s_banner"
-        category['default_poster'] = "s_flyer"
-        category['s_thumb'] = ""
+        category['default_poster'] = "s_poster"
+        category['s_icon'] = ""
         category['s_fanart'] = ""
         category['s_banner'] = ""
-        category['s_flyer'] = ""
+        category['s_poster'] = ""
         category['s_clearlogo'] = ""
         category['s_trailer'] = ""
         categories.append(category)
@@ -104,11 +107,12 @@ def generate_platform_launchers(games_xml, emulators):
             launchers[emulator_id]['game_count'] = 0
         launchers[emulator_id]['game_count'] += 1
         game_path = get_attribute_cdata(game_xml, 'ApplicationPath')
-        f = extract_path_parts(absolute_path([LBDIR, game_path]))
-        if f['dirname'] not in launchers[emulator_id]['paths']:
-            launchers[emulator_id]['paths'].append(f['dirname'])
-        if f['extension'] not in launchers[emulator_id]['extensions']:
-            launchers[emulator_id]['extensions'].append(f['extension'])
+        if '://' not in game_path:
+            f = extract_path_parts(absolute_path([LBDIR, game_path]))
+            if f['dirname'] not in launchers[emulator_id]['paths']:
+                launchers[emulator_id]['paths'].append(f['dirname'])
+            if f['extension'] not in launchers[emulator_id]['extensions']:
+                launchers[emulator_id]['extensions'].append(f['extension'])
     return launchers
 
 
@@ -123,7 +127,7 @@ def get_emulators(emulators_xml):
         emulators[emulator['id']] = emulator
     # Add direct executables as another (fake) emulator
     emulator = {}
-    emulator['path'] = ''
+    emulator['path'] = r'E:\Juegos\Emulation\default_launcher.bat'
     emulator['id'] = 'Executables'
     emulator['title'] = 'Executables'
     emulators[emulator['id']] = emulator
@@ -164,19 +168,19 @@ def generate_launchers(platforms_xml):
             launcher['num_clones'] = "0"
             launcher['timestamp_launcher'] = str(time.time())
             launcher['timestamp_report'] = "0.0"
-            launcher['default_thumb'] = "s_thumb"
+            launcher['default_thumb'] = "s_icon"
             launcher['default_fanart'] = "s_fanart"
             launcher['default_banner'] = "s_banner"
-            launcher['default_poster'] = "s_flyer"
-            launcher['roms_default_thumb'] = "s_boxfront"
+            launcher['default_poster'] = "s_poster"
+            launcher['roms_default_icon'] = "s_boxfront"
             launcher['roms_default_fanart'] = "s_fanart"
             launcher['roms_default_banner'] = "s_banner"
-            launcher['roms_default_poster'] = "s_flyer"
+            launcher['roms_default_poster'] = "s_poster"
             launcher['roms_default_clearlogo'] = "s_clearlogo"
-            launcher['s_thumb'] = absolute_path([LBIMGDIR, 'Platforms', platform_name, 'Banner', platform_name + '.jpg'])
-            launcher['s_fanart'] = absolute_path([LBIMGDIR, 'Platforms', platform_name, 'Fanart', platform_name + '.jpg'])
-            launcher['s_banner'] = absolute_path([LBIMGDIR, 'Platforms', platform_name, 'Banner', platform_name + '.jpg'])
-            launcher['s_flyer'] = ""
+            launcher['s_icon'] = find_first_file(absolute_path([LBIMGDIR, 'Platforms', platform_name, 'Banner']), '*.*')
+            launcher['s_fanart'] = find_first_file(absolute_path([LBIMGDIR, 'Platforms', platform_name, 'Fanart']), '*.*')
+            launcher['s_banner'] = find_first_file(absolute_path([LBIMGDIR, 'Platforms', platform_name, 'Banner']), '*.*')
+            launcher['s_poster'] = ""
             launcher['s_clearlogo'] = absolute_path([LBIMGDIR, 'Platforms', platform_launcher_name, 'Clear Logo'])
             launcher['s_trailer'] = ""
             launcher['path_banner'] = "E:\\Juegos\\Emulation\\AEL\\{}\\banner".format(platform_launcher_name)
@@ -207,6 +211,17 @@ def generate_platform_folders(platforms_xml):
     return platform_folders
 
 
+def get_associated_app(uri):
+    prefix, game = uri.split('://')
+    key = '{}\Shell\Open\Command'.format(prefix)
+    try:
+        command = winreg.QueryValue(winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, key), None)
+        app, params = shlex.split(command)
+    except FileNotFoundError:
+        app = None
+    return app
+
+
 def generate_games(platform, launcher_id):
     xml = untangle.parse(os.path.join(LBDATADIR,'Platforms','{}.xml'.format(platform)))
     # mapping of keys and values in the xml file
@@ -223,7 +238,7 @@ def generate_games(platform, launcher_id):
         'm_plot':'Notes',
         'm_rating':'',
         'm_esrb':'',
-        'm_studio':'Developer',
+        'm_developer':'Developer',
         'm_year':'ReleaseDate',
         'nointro_status':'',
         's_map':'',
@@ -241,7 +256,16 @@ def generate_games(platform, launcher_id):
         for key,value in game_info.items():
             result[game_id][key] = get_attribute_cdata(game_xml, value)
         # these values are special in some way
-        result[game_id]['filename'] = absolute_path([LBDIR, result[game_id]['filename']])
+        if '://' in result[game_id]['filename']:
+            uri = result[game_id]['filename']
+            result[game_id]['altapp'] = get_associated_app(uri)
+            result[game_id]['altarg'] = uri
+            result[game_id]['filename'] = '.'
+        elif emulator_id == 'Executables':
+            result[game_id]['altapp'] = result[game_id]['filename']
+            result[game_id]['altarg'] = ' '
+        else:
+            result[game_id]['filename'] = absolute_path([LBDIR, result[game_id]['filename']])
         result[game_id]['m_year'] = result[game_id]['m_year'][:4]
         result[game_id]['disks'] = []
         result[game_id]['nointro_status'] = "None"
@@ -259,7 +283,7 @@ def get_resource_order(f):
 
 # generate a list of resources per game
 def generate_game_resources(folders):
-    file_suffix = re.compile('-?[0-9]*$')
+    file_suffix = re.compile('-[0-9]*$')
     resources = {}
     # for each pair of resource type and folder, generate all found resources
     for folder_type, folder in folders.items():

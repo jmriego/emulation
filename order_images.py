@@ -24,8 +24,8 @@ for launcher, launcher_dict in launchers.items():
                 duplicate_resources[(platform_name, resource_type)][game_name] = filelist
                 possible_platforms.add(platform_name)
                 possible_resource_types.add(resource_type)
-                for f in filelist:
-                    file_properties[f] = (platform_name, resource_type, game_name)
+            for f in filelist:
+                file_properties[f] = (platform_name, resource_type, game_name)
 possible_platforms = sorted(list(possible_platforms))
 possible_resource_types = sorted(list(possible_resource_types))
 
@@ -398,9 +398,8 @@ class TestFrame(wx.Frame):
 
     def PrintCSVLine(self, line, f):
         for field in line:
-            field = field.encode('utf-8')
-            print(field, end='', file=f)
-            print(",", end='', file=f)
+            # field = field.encode('utf-8')
+            print(u'"{}",'.format(field), end='', file=f)
         print("", file=f)
 
     def PrintCSVFoundResources(self, f):
