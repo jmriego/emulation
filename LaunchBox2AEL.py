@@ -259,6 +259,7 @@ def generate_games(platform, launcher_id):
         if launcher_id != md5('{} {}'.format(platform, emulator_id).encode()).hexdigest():
             continue
         game_id = get_attribute_cdata(game_xml, 'ID')
+        dosbox_conf = get_attribute_cdata(game_xml, 'DosBoxConfigurationPath')
         result[game_id] = {}
         for key,value in game_info.items():
             result[game_id][key] = get_attribute_cdata(game_xml, value)
@@ -268,6 +269,9 @@ def generate_games(platform, launcher_id):
             result[game_id]['altapp'] = get_associated_app(uri)
             result[game_id]['altarg'] = uri
             result[game_id]['filename'] = '.'
+        elif dosbox_conf:
+            result[game_id]['altapp'] = DOSBOX_EXE
+            result[game_id]['altarg'] = DOSBOX_ARGS.format(dosbox_conf)
         elif emulator_id == 'Executables':
             result[game_id]['altapp'] = result[game_id]['filename']
             result[game_id]['altarg'] = ' '
