@@ -300,7 +300,7 @@ def generate_game_resources(folders):
     for folder_type, folder in folders.items():
         for f in find_files(folder, '*.*'):
             filename = extract_path_parts(f, 'rootname')
-            game = re.sub(file_suffix, '', clean_filename(filename))
+            game = re.sub(file_suffix, '', clean_filename(filename)).lower()
             if game not in resources:
                 resources[game] = {}
             if folder_type not in resources[game]:
@@ -312,21 +312,27 @@ def generate_game_resources(folders):
     return resources
 
 
-def get_game_resources(game_name, game_resources, resource_folders):
-    game_title_clean = clean_filename(game_name)
+def get_game_resources(game_data, game_resources, resource_folders):
+    game_title_clean = clean_filename(game_data['m_name']).lower()
+    romname_clean = clean_filename(extract_path_parts(game_data['filename'], 'rootname_nosuffix')).lower()
+    if game_title_clean != romname_clean:
+        possible_resource_names = [game_title_clean, romname_clean]
+    else:
+        possible_resource_names = [game_title_clean]
     possible_images = []
     for folder in resource_folders:
-        try:
-            possible_images.extend(game_resources[game_title_clean][folder])
-        except KeyError:
-            pass
+        for f in possible_resource_names:
+            try:
+                possible_images.extend(game_resources[f][folder])
+            except KeyError:
+                pass
     return possible_images
 
 
 def add_game_resources(games, game_resources):
     for game_id, game_data in games.items():
         for resource_type, resource_folders in folder_resource_types.items():
-            possible_images = get_game_resources(game_data['m_name'], game_resources, resource_folders)
+            possible_images = get_game_resources(game_data, game_resources, resource_folders)
             try:
                 chosen_image = possible_images[0]
             except:

@@ -4,7 +4,7 @@ from LaunchBox2AEL import generate_launchers, generate_platform_folders, generat
 from file_utils import absolute_path, extract_path_parts, rename_files, delete_file
 ##
 
-launchers = generate_launchers(absolute_path([LBDATADIR, 'Platforms.xml'], mode='os'))
+launchers = generate_launchers(absolute_path([LBDATADIR, 'Platforms.xml'], mode='os'), absolute_path([LBDATADIR, 'Parents.xml'], mode='os'))
 platform_folders = generate_platform_folders(absolute_path([LBDATADIR, 'Platforms.xml'], mode='os'))
 duplicate_resources = {}
 file_properties = {}
@@ -418,7 +418,7 @@ class TestFrame(wx.Frame):
                 line = [launcher_dict['platform'], m_name]
                 for resource_type in resource_types:
                     resource_folders = folder_resource_types[resource_type]
-                    line.append(str(len(get_game_resources(m_name, game_resources, resource_folders))))
+                    line.append(str(len(get_game_resources(game_details, game_resources, resource_folders))))
 
                 self.PrintCSVLine(line, f)
 
