@@ -134,7 +134,14 @@ def get_emulators(emulators_xml):
     return emulators
 
 
-def generate_launchers(platforms_xml):
+def generate_launchers(platforms_xml, parents_xml):
+    categories = {}
+    xml = untangle.parse(parents_xml)
+    for parent_xml in xml.LaunchBox.Parent:
+        platform_name = get_attribute_cdata(parent_xml, 'PlatformName')
+        category_name = get_attribute_cdata(parent_xml, 'ParentPlatformCategoryName')
+        categories[platform_name] = categories.get(platform_name, category_name)
+
     launchers = OrderedDict({})
     xml = untangle.parse(platforms_xml)
     emulators = get_emulators(os.path.join(LBDATADIR, 'Emulators.xml'))
@@ -146,7 +153,7 @@ def generate_launchers(platforms_xml):
             launcher = OrderedDict({})
             launcher['id'] = md5('{} {}'.format(platform_name, launcher_id).encode()).hexdigest()
             launcher['m_name'] = platform_name if len(platform_launchers)==1 else platform_launcher_name
-            launcher['categoryID'] = md5(get_attribute_cdata(platform_xml, 'Category').encode()).hexdigest()
+            launcher['categoryID'] = md5(categories[platform_name].encode()).hexdigest()
             launcher['platform'] = platform_name
             launcher['rompath'] = path.commonprefix(platform_launchers[launcher_id]['paths'])
             launcher['romext'] = ','.join(platform_launchers[launcher_id]['extensions'])
@@ -329,7 +336,7 @@ def add_game_resources(games, game_resources):
 ## Main code
 def generate_data():
     categories = generate_categories(os.path.join(LBDATADIR, 'Platforms.xml'))
-    launchers = generate_launchers(os.path.join(LBDATADIR, 'Platforms.xml'))
+    launchers = generate_launchers(os.path.join(LBDATADIR, 'Platforms.xml'), os.path.join(LBDATADIR, 'Parents.xml'))
     platform_folders = generate_platform_folders(os.path.join(LBDATADIR, 'Platforms.xml'))
 
     games = {}
