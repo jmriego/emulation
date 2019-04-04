@@ -10,12 +10,16 @@ from hashlib import md5
 import time
 import winreg
 import shlex
+import configparser
 
-## REQUIRED SETTINGS !!!
-#Use forward slashes / instead of backslashes \
-LBDIR = r"E:\Juegos\Emulation\LaunchBox"
-AELDIR = r"C:\Users\josem\AppData\Local\Packages\XBMCFoundation.Kodi_4n2hpmxwrvr6p\LocalCache\Roaming\Kodi\userdata\addon_data\plugin.program.advanced.emulator.launcher"
-## END REQUIRED SETTINGS !!!
+config = configparser.RawConfigParser()
+config.read('config.ini')
+print(config.sections())
+
+LBDIR = config.get('launchbox', 'dir')
+AELDIR = config.get('ael', 'dir').replace('%LOCALAPPDATA%', os.getenv('LOCALAPPDATA'))
+DOSBOX_EXE = config.get('dosbox', 'exe')
+DOSBOX_ARGS = config.get('dosbox', 'args')
 
 ## Directories inside LaunchBox
 LBDATADIR = os.path.join(LBDIR, "Data")
