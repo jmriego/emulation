@@ -1,6 +1,6 @@
 import os
 import ntpath as path
-from file_utils import absolute_path, find_files, find_first_file, clean_filename, extract_path_parts
+from file_utils import absolute_path, find_files, find_first_file, extract_path_parts
 import untangle
 from lxml import etree as ET
 import re
@@ -26,7 +26,7 @@ LBDATADIR = os.path.join(LBDIR, "Data")
 LBIMGDIR = os.path.join(LBDIR, "Images")
 
 ## Prefered directories for each image type
-folder_resource_types = {
+FOLDER_RESOURCE_TYPES = {
   's_banner': ['Banner', 'Steam Banner', 'Arcade - Marquee'],
   's_flyer': ['Advertisement Flyer - Front'],
   's_boxback': ['Box - Back'],
@@ -41,6 +41,7 @@ folder_resource_types = {
   's_trailer': ['Video']
 }
 
+BAD_CHARS_IN_FILENAME = ":/'"
 
 ## Functions used
 
@@ -50,6 +51,14 @@ def get_attribute_cdata(node, attribute, default=''):
     except:
         result = default
     return result if result else default
+
+
+def clean_filename(filename):
+    filename_no_bad_chars = ''.join('_' if c in BAD_CHARS_IN_FILENAME else c for c in filename)
+    try:
+        return unicodedata.normalize('NFC', filename_no_bad_chars)
+    except TypeError:
+        return filename_no_bad_chars
 
 
 def unique_everseen(iterable, key=None):
@@ -335,7 +344,7 @@ def get_game_resources(game_data, game_resources, resource_folders):
 
 def add_game_resources(games, game_resources):
     for game_id, game_data in games.items():
-        for resource_type, resource_folders in folder_resource_types.items():
+        for resource_type, resource_folders in FOLDER_RESOURCE_TYPES.items():
             possible_images = get_game_resources(game_data, game_resources, resource_folders)
             try:
                 chosen_image = possible_images[0]
