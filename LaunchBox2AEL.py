@@ -1,6 +1,7 @@
 import os
 import ntpath as path
 from file_utils import absolute_path, find_files, find_first_file, extract_path_parts
+from files.file import File
 import untangle
 from lxml import etree as ET
 import re
@@ -121,11 +122,11 @@ def generate_platform_launchers(games_xml, emulators):
         launchers[emulator_id]['game_count'] += 1
         game_path = get_attribute_cdata(game_xml, 'ApplicationPath')
         if '://' not in game_path:
-            f = extract_path_parts(absolute_path([LBDIR, game_path]))
-            if f['dirname'] not in launchers[emulator_id]['paths']:
-                launchers[emulator_id]['paths'].append(f['dirname'])
-            if f['extension'] not in launchers[emulator_id]['extensions']:
-                launchers[emulator_id]['extensions'].append(f['extension'])
+            f = File([LBDIR, game_path])
+            if f.dirname not in launchers[emulator_id]['paths']:
+                launchers[emulator_id]['paths'].append(f.dirname)
+            if f.extension not in launchers[emulator_id]['extensions']:
+                launchers[emulator_id]['extensions'].append(f.extension)
     return launchers
 
 
@@ -197,9 +198,9 @@ def generate_launchers(platforms_xml, parents_xml):
             launcher['roms_default_banner'] = "s_banner"
             launcher['roms_default_poster'] = "s_poster"
             launcher['roms_default_clearlogo'] = "s_clearlogo"
-            launcher['s_icon'] = find_first_file(absolute_path([LBIMGDIR, 'Platforms', platform_name, 'Banner']), '*.*')
-            launcher['s_fanart'] = find_first_file(absolute_path([LBIMGDIR, 'Platforms', platform_name, 'Fanart']), '*.*')
-            launcher['s_banner'] = find_first_file(absolute_path([LBIMGDIR, 'Platforms', platform_name, 'Banner']), '*.*')
+            launcher['s_icon'] = find_first_file([LBIMGDIR, 'Platforms', platform_name, 'Banner'], '*.*')
+            launcher['s_fanart'] = find_first_file([LBIMGDIR, 'Platforms', platform_name, 'Fanart'], '*.*')
+            launcher['s_banner'] = find_first_file([LBIMGDIR, 'Platforms', platform_name, 'Banner'], '*.*')
             launcher['s_poster'] = ""
             launcher['s_clearlogo'] = absolute_path([LBIMGDIR, 'Platforms', platform_launcher_name, 'Clear Logo'])
             launcher['s_trailer'] = ""

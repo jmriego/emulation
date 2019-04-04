@@ -50,6 +50,7 @@ class File:
 
 
 def find_files(startdir, pattern, mode='win'):
+    startdir = File(startdir).absolute_path()
     path = get_path_library(mode)
     results = []
     for base, dirs, files in os.walk(startdir):
