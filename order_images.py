@@ -1,11 +1,14 @@
 from __future__ import print_function
 import wx
-from LaunchBox2AEL import generate_launchers, generate_platform_folders, generate_game_resources, LBDATADIR, generate_data, get_game_resources, FOLDER_RESOURCE_TYPES
+from LaunchBox2AEL import generate_launchers, generate_platform_folders, generate_game_resources, generate_data, get_game_resources, FOLDER_RESOURCE_TYPES, LBDIR
+from launchbox.catalog import LaunchBox
 from files.file import File, rename_files
 ##
 
-launchers = generate_launchers(File([LBDATADIR, 'Platforms.xml']).absolute, File([LBDATADIR, 'Parents.xml']).absolute)
-platform_folders = generate_platform_folders(File([LBDATADIR, 'Platforms.xml']).absolute)
+launchbox = LaunchBox(LBDIR)
+
+launchers = generate_launchers(File([launchbox.data_dir, 'Platforms.xml']).absolute, File([launchbox.data_dir, 'Parents.xml']).absolute)
+platform_folders = generate_platform_folders(File([launchbox.data_dir, 'Platforms.xml']).absolute)
 duplicate_resources = {}
 file_properties = {}
 possible_platforms = set()
@@ -409,7 +412,7 @@ class TestFrame(wx.Frame):
         self.PrintCSVLine(header, f)
 
         # generate lines with games and their number of resources found by type
-        platform_folders = generate_platform_folders(File([LBDATADIR, 'Platforms.xml']).absolute)
+        platform_folders = generate_platform_folders(File([launchbox.data_dir, 'Platforms.xml']).absolute)
         categories, launchers, games = generate_data()
         for launcher, launcher_dict in launchers.items():
             game_resources = generate_game_resources(platform_folders[launcher_dict['platform']])

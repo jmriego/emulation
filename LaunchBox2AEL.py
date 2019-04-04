@@ -1,6 +1,7 @@
 import os
 import ntpath as path
 from files.file import File, find_files
+from launchbox.catalog import LaunchBox
 import untangle
 from lxml import etree as ET
 import re
@@ -17,13 +18,11 @@ config = configparser.RawConfigParser()
 config.read('config.ini')
 
 LBDIR = config.get('launchbox', 'dir')
-AELDIR = config.get('ael', 'dir').replace('%LOCALAPPDATA%', os.getenv('LOCALAPPDATA'))
+AELDIR = os.path.expandvars(config.get('ael', 'dir'))
 DOSBOX_EXE = config.get('dosbox', 'exe')
 DOSBOX_ARGS = config.get('dosbox', 'args')
 
-## Directories inside LaunchBox
-LBDATADIR = os.path.join(LBDIR, "Data")
-LBIMGDIR = os.path.join(LBDIR, "Images")
+launchbox = LaunchBox(LBDIR)
 
 ## Prefered directories for each image type
 FOLDER_RESOURCE_TYPES = {
@@ -69,24 +68,6 @@ def find_first_file(startdir, pattern, mode='win'):
         return None
 
 
-def unique_everseen(iterable, key=None):
-    "List unique elements, preserving order. Remember all elements ever seen."
-    # unique_everseen('AAAABBBCCDAABBB') --> A B C D
-    # unique_everseen('ABBCcAD', str.lower) --> A B C D
-    seen = set()
-    seen_add = seen.add
-    if key is None:
-        for element in filterfalse(seen.__contains__, iterable):
-            seen_add(element)
-            yield element
-    else:
-        for element in iterable:
-            k = key(element)
-            if k not in seen:
-                seen_add(k)
-                yield element
-
-
 def generate_categories(platforms_xml):
     categories = []
     xml = untangle.parse(platforms_xml)
@@ -118,11 +99,11 @@ def generate_platform_launchers(games_xml, emulators):
     for game_xml in xml.LaunchBox.Game:
         # get the emulator for this game. If not found, it's an executable file
         emulator_id = get_attribute_cdata(game_xml, 'Emulator', 'Executables')
-        emulator = emulators[emulator_id]
+        emulator = launchbox.emulators[emulator_id]
         if not emulator_id in launchers:
             launchers[emulator_id] = {}
-            launchers[emulator_id]['title'] = emulator['title']
-            launchers[emulator_id]['emulator_path'] = emulator['path']
+            launchers[emulator_id]['title'] = emulator.title
+            launchers[emulator_id]['emulator_path'] = emulator.path
             launchers[emulator_id]['paths'] = []
             launchers[emulator_id]['extensions'] = []
             launchers[emulator_id]['game_count'] = 0
@@ -137,38 +118,25 @@ def generate_platform_launchers(games_xml, emulators):
     return launchers
 
 
-def get_emulators(emulators_xml):
-    xml = untangle.parse(emulators_xml)
-    emulators = {}
-    for emulators_xml in xml.LaunchBox.Emulator:
-        emulator = {}
-        emulator['path'] = get_attribute_cdata(emulators_xml, 'ApplicationPath')
-        emulator['id'] = get_attribute_cdata(emulators_xml, 'ID')
-        emulator['title'] = get_attribute_cdata(emulators_xml, 'Title')
-        emulators[emulator['id']] = emulator
-    # Add direct executables as another (fake) emulator
-    emulator = {}
-    emulator['path'] = r'E:\Juegos\Emulation\default_launcher.bat'
-    emulator['id'] = 'Executables'
-    emulator['title'] = 'Executables'
-    emulators[emulator['id']] = emulator
-    return emulators
 
 
 def generate_launchers(platforms_xml, parents_xml):
     categories = {}
+    categories2 = {}
     xml = untangle.parse(parents_xml)
     for parent_xml in xml.LaunchBox.Parent:
         platform_name = get_attribute_cdata(parent_xml, 'PlatformName')
         category_name = get_attribute_cdata(parent_xml, 'ParentPlatformCategoryName')
-        categories[platform_name] = categories.get(platform_name, category_name)
+        categories[platform_name] = category_name
+
 
     launchers = OrderedDict({})
     xml = untangle.parse(platforms_xml)
-    emulators = get_emulators(os.path.join(LBDATADIR, 'Emulators.xml'))
     for platform_xml in xml.LaunchBox.Platform:
         platform_name = get_attribute_cdata(platform_xml, 'Name')
-        platform_launchers = generate_platform_launchers(os.path.join(LBDATADIR,'Platforms','{}.xml'.format(platform_name)), emulators)
+        platform_launchers = generate_platform_launchers(
+                os.path.join(launchbox.data_dir,'Platforms','{}.xml'.format(platform_name)),
+                launchbox.emulators)
         for launcher_id in platform_launchers:
             platform_launcher_name = '{} ({})'.format(platform_name, platform_launchers[launcher_id]['title'])
             launcher = OrderedDict({})
@@ -205,11 +173,11 @@ def generate_launchers(platforms_xml, parents_xml):
             launcher['roms_default_banner'] = "s_banner"
             launcher['roms_default_poster'] = "s_poster"
             launcher['roms_default_clearlogo'] = "s_clearlogo"
-            launcher['s_icon'] = find_first_file([LBIMGDIR, 'Platforms', platform_name, 'Banner'], '*.*')
-            launcher['s_fanart'] = find_first_file([LBIMGDIR, 'Platforms', platform_name, 'Fanart'], '*.*')
-            launcher['s_banner'] = find_first_file([LBIMGDIR, 'Platforms', platform_name, 'Banner'], '*.*')
+            launcher['s_icon'] = find_first_file([launchbox.images_dir, 'Platforms', platform_name, 'Banner'], '*.*')
+            launcher['s_fanart'] = find_first_file([launchbox.images_dir, 'Platforms', platform_name, 'Fanart'], '*.*')
+            launcher['s_banner'] = find_first_file([launchbox.images_dir, 'Platforms', platform_name, 'Banner'], '*.*')
             launcher['s_poster'] = ""
-            launcher['s_clearlogo'] = File([LBIMGDIR, 'Platforms', platform_launcher_name, 'Clear Logo']).absolute
+            launcher['s_clearlogo'] = File([launchbox.images_dir, 'Platforms', platform_launcher_name, 'Clear Logo']).absolute
             launcher['s_trailer'] = ""
             launcher['path_banner'] = "E:\\Juegos\\Emulation\\AEL\\{}\\banner".format(platform_launcher_name)
             launcher['path_clearlogo'] = "E:\\Juegos\\Emulation\\AEL\\{}\\clearlogo".format(platform_launcher_name)
@@ -251,7 +219,7 @@ def get_associated_app(uri):
 
 
 def generate_games(platform, launcher_id):
-    xml = untangle.parse(os.path.join(LBDATADIR,'Platforms','{}.xml'.format(platform)))
+    xml = untangle.parse(os.path.join(launchbox.data_dir,'Platforms','{}.xml'.format(platform)))
     # mapping of keys and values in the xml file
     game_info = {
         'altapp':'',
@@ -366,9 +334,9 @@ def add_game_resources(games, game_resources):
 
 ## Main code
 def generate_data():
-    categories = generate_categories(os.path.join(LBDATADIR, 'Platforms.xml'))
-    launchers = generate_launchers(os.path.join(LBDATADIR, 'Platforms.xml'), os.path.join(LBDATADIR, 'Parents.xml'))
-    platform_folders = generate_platform_folders(os.path.join(LBDATADIR, 'Platforms.xml'))
+    categories = generate_categories(os.path.join(launchbox.data_dir, 'Platforms.xml'))
+    launchers = generate_launchers(os.path.join(launchbox.data_dir, 'Platforms.xml'), os.path.join(launchbox.data_dir, 'Parents.xml'))
+    platform_folders = generate_platform_folders(os.path.join(launchbox.data_dir, 'Platforms.xml'))
 
     games = {}
     for launcher, launcher_dict in launchers.items():
