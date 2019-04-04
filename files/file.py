@@ -2,7 +2,6 @@ import os
 import ntpath
 import fnmatch
 import re
-import unicodedata
 
 file_suffix = re.compile('-[0-9]+$')
 
@@ -13,9 +12,9 @@ class File:
         if isinstance(f, list):
             f = path.join(*f)
 
-        self.f = f
+        self.path = f
         self.dirname, self.filename = path.split(f)
-        self.rootname, self.extension = path.splitext(filename)
+        self.rootname, self.extension = path.splitext(self.filename)
 
         # remove dot from extension
         self.extension = self.extension[1:]
@@ -28,10 +27,9 @@ class File:
             self.suffix  = None
             self.rootname_nosuffix = self.rootname
 
-
     def split_path(self):
         path = ntpath if self.mode=='win' else os.path
-        dirname = self.f
+        dirname = self.path
         path_split = []
         while True:
             dirname,leaf = path.split(dirname)
@@ -42,29 +40,24 @@ class File:
                 break
         return path_split
 
-
-    def absolute_path(self):
+    @property
+    def absolute(self):
         path = ntpath if self.mode=='win' else os.path
         path_split = self.split_path()
         return path.abspath(path.join(*path_split))
 
+    def delete(self):
+        os.remove(self.absolute)
+
 
 def find_files(startdir, pattern, mode='win'):
-    startdir = File(startdir).absolute_path()
-    path = get_path_library(mode)
+    path = ntpath if mode=='win' else os.path
+    startdir = File(startdir).absolute
     results = []
     for base, dirs, files in os.walk(startdir):
         goodfiles = fnmatch.filter(files, pattern)
-        results.extend(absolute_path([base,f]) for f in goodfiles)
+        results.extend(File([base,f]).absolute for f in goodfiles)
     return results
-
-def find_first_file(startdir, pattern, mode='win'):
-    results = find_files(startdir, pattern, mode)
-    try:
-        return results[0]
-    except IndexError:
-        return None
-
 
 
 # TODO better error exception solving

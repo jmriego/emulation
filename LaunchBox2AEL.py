@@ -1,7 +1,6 @@
 import os
 import ntpath as path
-from file_utils import absolute_path, find_files, find_first_file, extract_path_parts
-from files.file import File
+from files.file import File, find_files
 import untangle
 from lxml import etree as ET
 import re
@@ -12,10 +11,10 @@ import time
 import winreg
 import shlex
 import configparser
+import unicodedata
 
 config = configparser.RawConfigParser()
 config.read('config.ini')
-print(config.sections())
 
 LBDIR = config.get('launchbox', 'dir')
 AELDIR = config.get('ael', 'dir').replace('%LOCALAPPDATA%', os.getenv('LOCALAPPDATA'))
@@ -60,6 +59,14 @@ def clean_filename(filename):
         return unicodedata.normalize('NFC', filename_no_bad_chars)
     except TypeError:
         return filename_no_bad_chars
+
+
+def find_first_file(startdir, pattern, mode='win'):
+    results = find_files(startdir, pattern, mode)
+    try:
+        return results[0]
+    except IndexError:
+        return None
 
 
 def unique_everseen(iterable, key=None):
@@ -202,7 +209,7 @@ def generate_launchers(platforms_xml, parents_xml):
             launcher['s_fanart'] = find_first_file([LBIMGDIR, 'Platforms', platform_name, 'Fanart'], '*.*')
             launcher['s_banner'] = find_first_file([LBIMGDIR, 'Platforms', platform_name, 'Banner'], '*.*')
             launcher['s_poster'] = ""
-            launcher['s_clearlogo'] = absolute_path([LBIMGDIR, 'Platforms', platform_launcher_name, 'Clear Logo'])
+            launcher['s_clearlogo'] = File([LBIMGDIR, 'Platforms', platform_launcher_name, 'Clear Logo']).absolute
             launcher['s_trailer'] = ""
             launcher['path_banner'] = "E:\\Juegos\\Emulation\\AEL\\{}\\banner".format(platform_launcher_name)
             launcher['path_clearlogo'] = "E:\\Juegos\\Emulation\\AEL\\{}\\clearlogo".format(platform_launcher_name)
@@ -228,7 +235,7 @@ def generate_platform_folders(platforms_xml):
         media_path = get_attribute_cdata(folder_xml, 'FolderPath')
         if not platform_name in platform_folders:
             platform_folders[platform_name] = {}
-        platform_folders[platform_name][media_type] = absolute_path([LBDIR, media_path])
+        platform_folders[platform_name][media_type] = File([LBDIR, media_path]).absolute
     return platform_folders
 
 
@@ -290,7 +297,7 @@ def generate_games(platform, launcher_id):
             result[game_id]['altapp'] = result[game_id]['filename']
             result[game_id]['altarg'] = ' '
         else:
-            result[game_id]['filename'] = absolute_path([LBDIR, result[game_id]['filename']])
+            result[game_id]['filename'] = File([LBDIR, result[game_id]['filename']]).absolute
         result[game_id]['m_year'] = result[game_id]['m_year'][:4]
         result[game_id]['disks'] = []
         result[game_id]['nointro_status'] = "None"
@@ -300,7 +307,7 @@ def generate_games(platform, launcher_id):
 def get_resource_order(f):
     file_suffix = re.compile('-?[0-9]*$')
     try:
-        order = abs(int(extract_path_parts(f, 'suffix')))
+        order = abs(int(File(f).suffix))
     except TypeError:
         order = 9999
     return order
@@ -313,7 +320,7 @@ def generate_game_resources(folders):
     # for each pair of resource type and folder, generate all found resources
     for folder_type, folder in folders.items():
         for f in find_files(folder, '*.*'):
-            filename = extract_path_parts(f, 'rootname')
+            filename = File(f).rootname
             game = re.sub(file_suffix, '', clean_filename(filename)).lower()
             if game not in resources:
                 resources[game] = {}
@@ -328,7 +335,7 @@ def generate_game_resources(folders):
 
 def get_game_resources(game_data, game_resources, resource_folders):
     game_title_clean = clean_filename(game_data['m_name']).lower()
-    romname_clean = clean_filename(extract_path_parts(game_data['filename'], 'rootname_nosuffix')).lower()
+    romname_clean = clean_filename(File(game_data['filename']).rootname_nosuffix).lower()
     if game_title_clean != romname_clean:
         possible_resource_names = [game_title_clean, romname_clean]
     else:

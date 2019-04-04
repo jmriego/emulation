@@ -1,11 +1,11 @@
 from __future__ import print_function
 import wx
-from LaunchBox2AEL import generate_launchers, generate_platform_folders, generate_game_resources, LBDATADIR, generate_data, get_game_resources, folder_resource_types
-from file_utils import absolute_path, extract_path_parts, rename_files, delete_file
+from LaunchBox2AEL import generate_launchers, generate_platform_folders, generate_game_resources, LBDATADIR, generate_data, get_game_resources, FOLDER_RESOURCE_TYPES
+from files.file import File, rename_files
 ##
 
-launchers = generate_launchers(absolute_path([LBDATADIR, 'Platforms.xml'], mode='os'), absolute_path([LBDATADIR, 'Parents.xml'], mode='os'))
-platform_folders = generate_platform_folders(absolute_path([LBDATADIR, 'Platforms.xml'], mode='os'))
+launchers = generate_launchers(File([LBDATADIR, 'Platforms.xml']).absolute, File([LBDATADIR, 'Parents.xml']).absolute)
+platform_folders = generate_platform_folders(File([LBDATADIR, 'Platforms.xml']).absolute)
 duplicate_resources = {}
 file_properties = {}
 possible_platforms = set()
@@ -46,10 +46,10 @@ def move_element_list(element, elements_list, move=-1):
 ##
 def regenerate_numbers_ordered_files(files):
     result = []
-    for order, f in enumerate(files):
-        file_parts = extract_path_parts(f)
-        new_filename = '{}-{:02d}.{}'.format(file_parts['rootname_nosuffix'], order + 1, file_parts['extension'])
-        result.append(absolute_path([file_parts['dirname'], new_filename], mode='os'))
+    for order, file_path in enumerate(files):
+        resource_file = File(file_path)
+        new_filename = '{}-{:02d}.{}'.format(resource_file.rootname_nosuffix, order + 1, resource_file.extension)
+        result.append(File([resource_file.dirname, new_filename]).absolute)
     return result
 ##
 # move a specified resource file to give it more or less priority
@@ -63,7 +63,7 @@ def reprioritize_resource(resource, move=-1, delete=False):
         if delete:
             new_list = old_list
             new_list.remove(resource)
-            delete_file(resource)
+            File(resource).delete()
         else:
             new_list = move_element_list(resource, old_list, move=move)
             resource_pos = new_list.index(resource)
@@ -409,7 +409,7 @@ class TestFrame(wx.Frame):
         self.PrintCSVLine(header, f)
 
         # generate lines with games and their number of resources found by type
-        platform_folders = generate_platform_folders(absolute_path([LBDATADIR, 'Platforms.xml'], mode='os'))
+        platform_folders = generate_platform_folders(File([LBDATADIR, 'Platforms.xml']).absolute)
         categories, launchers, games = generate_data()
         for launcher, launcher_dict in launchers.items():
             game_resources = generate_game_resources(platform_folders[launcher_dict['platform']])
