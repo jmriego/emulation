@@ -68,30 +68,25 @@ def find_first_file(startdir, pattern, mode='win'):
         return None
 
 
-def generate_categories(platforms_xml):
-    categories = []
-    xml = untangle.parse(platforms_xml)
-    for category_xml in xml.LaunchBox.PlatformCategory:
-        category = OrderedDict({})
-        category_name = category_xml.Name.cdata
-        category['id'] = md5(category_name.encode()).hexdigest()
-        category['m_name'] = category_name
-        category['m_genre'] = category_name
-        category['m_plot'] = category_xml.Notes.cdata
-        category['m_rating'] = ""
-        category['finished'] = "False"
-        category['default_thumb'] = "s_icon"
-        category['default_fanart'] = "s_fanart"
-        category['default_banner'] = "s_banner"
-        category['default_poster'] = "s_poster"
-        category['s_icon'] = ""
-        category['s_fanart'] = ""
-        category['s_banner'] = ""
-        category['s_poster'] = ""
-        category['s_clearlogo'] = ""
-        category['s_trailer'] = ""
-        categories.append(category)
-    return categories
+def category_to_ael(category):
+    category_ael = OrderedDict({})
+    category_ael['id'] = category.id
+    category_ael['m_name'] = category.name
+    category_ael['m_genre'] = category.name
+    category_ael['m_plot'] = category.notes
+    category_ael['m_rating'] = ""
+    category_ael['finished'] = "False"
+    category_ael['default_thumb'] = "s_icon"
+    category_ael['default_fanart'] = "s_fanart"
+    category_ael['default_banner'] = "s_banner"
+    category_ael['default_poster'] = "s_poster"
+    category_ael['s_icon'] = ""
+    category_ael['s_fanart'] = ""
+    category_ael['s_banner'] = ""
+    category_ael['s_poster'] = ""
+    category_ael['s_clearlogo'] = ""
+    category_ael['s_trailer'] = ""
+    return category_ael
 
 def generate_platform_launchers(games_xml, emulators):
     xml = untangle.parse(games_xml)
@@ -122,7 +117,6 @@ def generate_platform_launchers(games_xml, emulators):
 
 def generate_launchers(platforms_xml, parents_xml):
     categories = {}
-    categories2 = {}
     xml = untangle.parse(parents_xml)
     for parent_xml in xml.LaunchBox.Parent:
         platform_name = get_attribute_cdata(parent_xml, 'PlatformName')
@@ -334,7 +328,7 @@ def add_game_resources(games, game_resources):
 
 ## Main code
 def generate_data():
-    categories = generate_categories(os.path.join(launchbox.data_dir, 'Platforms.xml'))
+    categories = launchbox.categories
     launchers = generate_launchers(os.path.join(launchbox.data_dir, 'Platforms.xml'), os.path.join(launchbox.data_dir, 'Parents.xml'))
     platform_folders = generate_platform_folders(os.path.join(launchbox.data_dir, 'Platforms.xml'))
 
@@ -357,7 +351,7 @@ def write_files(categories, launchers, games):
 
     for category in categories:
         category_xml = ET.SubElement(root, "category")
-        for key,value in category.items():
+        for key,value in category_to_ael(category).items():
             ET.SubElement(category_xml, key).text = value
 
     for launcher_name, launcher_data in launchers.items():
