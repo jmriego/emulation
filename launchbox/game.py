@@ -1,5 +1,4 @@
 import untangle
-from hashlib import md5
 from files.file import File
 
 class Game:

@@ -4,7 +4,8 @@ from files.file import File
 # launcher is the combination of platform and either an emulator id or executables
 class Launcher:
     def __init__(self, platform, emulator):
-        self.id = '{} ({})'.format(platform.name, emulator.name)
+        self.name = '{} ({})'.format(platform.name, emulator.name)
+        self.id = md5(self.name.encode()).hexdigest()
         self.platform = platform
         self.emulator = emulator
         self.games = []

@@ -8,7 +8,6 @@ from lxml import etree as ET
 import re
 from collections import OrderedDict
 import json
-from hashlib import md5
 import time
 import winreg
 import shlex
@@ -23,6 +22,7 @@ AELDIR = os.path.expandvars(config.get('ael', 'dir'))
 DOSBOX_EXE = config.get('dosbox', 'exe')
 DOSBOX_ARGS = config.get('dosbox', 'args')
 
+os.chdir(LBDIR)
 launchbox = LaunchBox(LBDIR)
 
 ## Prefered directories for each image type
@@ -93,7 +93,7 @@ def category_to_ael(category):
 def launcher_to_ael(launcher):
     return OrderedDict((
                 ('id', launcher.id),
-                ('m_name', launcher.platform.name), #TODO id if more than one platform
+                ('m_name', launcher.platform.name if len(launcher.games) == 1 else launcher.name),
                 ('categoryID', launcher.platform.category.id),
                 ('platform', launcher.platform.name),
                 ('rompath', path.commonprefix(list(launcher.paths))),
@@ -107,7 +107,7 @@ def launcher_to_ael(launcher):
                 ('args', '"$rom$"'), # TODO get from LaunchBox
                 ('finished', "False"),
                 ('minimize', "False"),
-                ('roms_base_noext', clean_filename("LB2AEL_{}_roms".format(launcher.id.replace(' ', '_')))),
+                ('roms_base_noext', clean_filename("LB2AEL_{}_roms".format(launcher.name.replace(' ', '_')))),
                 ('nointro_xml_file', ""),
                 ('nointro_display_mode', "All ROMs"),
                 ('pclone_launcher', "False"),
