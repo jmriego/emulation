@@ -30,6 +30,9 @@ class PlatformsCatalog:
             category_name = get_attribute_cdata(parent_xml, 'ParentPlatformCategoryName')
             self.platforms[platform_name].category = categories.search(category_name)
 
+    def __iter__(self):
+        return iter(self.platforms.values())
+
     def __getitem__(self, key):
         return self.platforms[key]
 

@@ -3,6 +3,7 @@ import untangle
 from launchbox.emulator import Emulator, EmulatorCatalog
 from launchbox.category import Category, CategoriesCatalog
 from launchbox.platform import Platform, PlatformsCatalog
+from launchbox.game import Game, GamesCatalog
 
 class LaunchBox:
     def __init__(self, lb_dir):
@@ -13,6 +14,7 @@ class LaunchBox:
         self._emulators = None
         self._categories = None
         self._platforms = None
+        self._games = None
 
     @property
     def emulators(self):
@@ -39,3 +41,13 @@ class LaunchBox:
                     File([self.data_dir, "Parents.xml"]).absolute,
                     self.categories)
         return self._platforms
+
+    @property
+    def games(self):
+        if self._games is None:
+            # the games are inside the Platforms folder
+            # one .xml file per platform with the games inside
+            self._games = GamesCatalog(
+                    File([self.data_dir, "Platforms"]).absolute,
+                    self.platforms)
+        return self._games
