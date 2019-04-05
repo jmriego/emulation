@@ -81,11 +81,11 @@ def category_to_ael(category):
     category_ael['default_fanart'] = "s_fanart"
     category_ael['default_banner'] = "s_banner"
     category_ael['default_poster'] = "s_poster"
-    category_ael['s_icon'] = ""
-    category_ael['s_fanart'] = ""
-    category_ael['s_banner'] = ""
+    category_ael['s_icon'] = find_first_file([launchbox.images_dir, 'Platform Categories', category.name, 'Clear Logo'], '*.*')
+    category_ael['s_fanart'] = find_first_file([launchbox.images_dir, 'Platform Categories', category.name, 'Fanart'], '*.*')
+    category_ael['s_banner'] = find_first_file([launchbox.images_dir, 'Platform Categories', category.name, 'Banner'], '*.*')
     category_ael['s_poster'] = ""
-    category_ael['s_clearlogo'] = ""
+    category_ael['s_clearlogo'] = find_first_file([launchbox.images_dir, 'Platform Categories', category.name, 'Clear Logo'], '*.*')
     category_ael['s_trailer'] = ""
     return category_ael
 
