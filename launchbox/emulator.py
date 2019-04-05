@@ -1,10 +1,10 @@
 import untangle
 
 class Emulator:
-    def __init__(self, emulator_xml_node, id=None, path=None, title=None):
+    def __init__(self, emulator_xml_node, id=None, path=None, name=None):
         self.path = path if path else get_attribute_cdata(emulator_xml_node, 'ApplicationPath')
         self.id = id if id else get_attribute_cdata(emulator_xml_node, 'ID')
-        self.title = title if title else get_attribute_cdata(emulator_xml_node, 'Title')
+        self.name = name if name else get_attribute_cdata(emulator_xml_node, 'Title')
 
 
 class EmulatorCatalog:

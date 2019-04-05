@@ -41,6 +41,12 @@ class File:
         return path_split
 
     @property
+    def absolute_dir(self):
+        path = ntpath if self.mode=='win' else os.path
+        path_split = self.split_path()
+        return path.abspath(path.join(*path_split[:-1]))
+
+    @property
     def absolute(self):
         path = ntpath if self.mode=='win' else os.path
         path_split = self.split_path()

@@ -49,5 +49,6 @@ class LaunchBox:
             # one .xml file per platform with the games inside
             self._games = GamesCatalog(
                     File([self.data_dir, "Platforms"]).absolute,
-                    self.platforms)
+                    self.platforms,
+                    self.emulators)
         return self._games
