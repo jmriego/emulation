@@ -24,6 +24,11 @@ class CategoriesCatalog:
     def __getitem__(self, key):
         return self.categories[key]
 
+    def search(self, name):
+        for category in self:
+            if category.name == name:
+                return category
+
 
 def get_attribute_cdata(node, attribute, default=''):
     try:
