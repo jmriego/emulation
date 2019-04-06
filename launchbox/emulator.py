@@ -5,6 +5,14 @@ class Emulator:
         self.path = path if path else get_attribute_cdata(emulator_xml_node, 'ApplicationPath')
         self.id = id if id else get_attribute_cdata(emulator_xml_node, 'ID')
         self.name = name if name else get_attribute_cdata(emulator_xml_node, 'Title')
+        command_line = get_attribute_cdata(emulator_xml_node, 'CommandLine')
+        space = get_attribute_cdata(emulator_xml_node, 'NoSpace') != "true"
+        quotes = get_attribute_cdata(emulator_xml_node, 'NoQuotes') != "true"
+        self.args = (
+                command_line
+                + (' ' if space else '')
+                + ('"{}"' if quotes else '{}')
+                ).lstrip()
 
 
 class EmulatorCatalog:

@@ -104,7 +104,7 @@ def launcher_to_ael(launcher):
                 ('m_plot', ""),
                 ('m_rating', ""),
                 ('application', launcher.emulator.path),
-                ('args', '"$rom$"'), # TODO get from LaunchBox
+                ('args', launcher.emulator.args.format('$rom$')),
                 ('finished', "False"),
                 ('minimize', "False"),
                 ('roms_base_noext', clean_filename("LB2AEL_{}_roms".format(launcher.name.replace(' ', '_')))),
