@@ -2,7 +2,9 @@ import os
 import ntpath as path
 from files.file import File, find_files
 from launchbox.catalog import LaunchBox
-from ael.launcher import AELLaunchersCatalog
+from ael.utils import clean_filename
+from ael.launcher import LaunchersCatalog as AELLaunchersCatalog
+from ael.game import Game as AELGame
 from ael.category import Category as AELCategory
 import untangle
 from lxml import etree as ET
@@ -13,7 +15,6 @@ import time
 import winreg
 import shlex
 import configparser
-import unicodedata
 
 config = configparser.RawConfigParser()
 config.read(File([os.path.dirname(__file__), 'config.ini']).absolute)
@@ -42,88 +43,14 @@ FOLDER_RESOURCE_TYPES = {
   's_trailer': ['Video']
 }
 
-BAD_CHARS_IN_FILENAME = ":/'"
 
 ## Functions used
-
 def get_attribute_cdata(node, attribute, default=''):
     try:
         result = getattr(node, attribute).cdata
     except:
         result = default
     return result if result else default
-
-
-def clean_filename(filename):
-    filename_no_bad_chars = ''.join('_' if c in BAD_CHARS_IN_FILENAME else c for c in filename)
-    try:
-        return unicodedata.normalize('NFC', filename_no_bad_chars)
-    except TypeError:
-        return filename_no_bad_chars
-
-
-def find_first_file(startdir, pattern, mode='win'):
-    results = find_files(startdir, pattern, mode)
-    try:
-        return results[0]
-    except IndexError:
-        return None
-
-
-def launcher_to_ael(launcher):
-    return OrderedDict((
-                ('id', launcher.id),
-                ('m_name', launcher.platform.name if len(launcher.games) == 1 else launcher.name),
-                ('categoryID', launcher.platform.category.id),
-                ('platform', launcher.platform.name),
-                ('rompath', path.commonprefix(list(launcher.paths))),
-                ('romext', ','.join(launcher.extensions)),
-                ('m_year', launcher.platform.release_year),
-                ('m_genre', ""),
-                ('m_studio', launcher.platform.developer),
-                ('m_plot', ""),
-                ('m_rating', ""),
-                ('application', launcher.emulator.path),
-                ('args', launcher.emulator.args.format('$rom$')),
-                ('finished', "False"),
-                ('minimize', "False"),
-                ('roms_base_noext', clean_filename("LB2AEL_{}_roms".format(launcher.name.replace(' ', '_')))),
-                ('nointro_xml_file', ""),
-                ('nointro_display_mode', "All ROMs"),
-                ('pclone_launcher', "False"),
-                ('num_roms', str(len(launcher.games))),
-                ('num_parents', "0"),
-                ('num_clones', "0"),
-                ('timestamp_launcher', str(time.time())),
-                ('timestamp_report', "0.0"),
-                ('default_thumb', "s_icon"),
-                ('default_fanart', "s_fanart"),
-                ('default_banner', "s_banner"),
-                ('default_poster', "s_poster"),
-                ('roms_default_icon', "s_boxfront"),
-                ('roms_default_fanart', "s_fanart"),
-                ('roms_default_banner', "s_banner"),
-                ('roms_default_poster', "s_poster"),
-                ('roms_default_clearlogo', "s_clearlogo"),
-                ('s_icon', find_first_file([launchbox.images_dir, 'Platforms', launcher.platform.name, 'Banner'], '*.*')),
-                ('s_fanart', find_first_file([launchbox.images_dir, 'Platforms', launcher.platform.name, 'Fanart'], '*.*')),
-                ('s_banner', find_first_file([launchbox.images_dir, 'Platforms', launcher.platform.name, 'Banner'], '*.*')),
-                ('s_poster', ""),
-                ('s_clearlogo', find_first_file([launchbox.images_dir, 'Platforms', launcher.platform.name, 'Clear Logo'], '*.*')),
-                ('s_trailer', ""), #TODO this and lower down
-                ('path_banner', "E:\\Juegos\\Emulation\\AEL\\{}\\banner".format(launcher.platform.name)),
-                ('path_clearlogo', "E:\\Juegos\\Emulation\\AEL\\{}\\clearlogo".format(launcher.platform.name)),
-                ('path_fanart', "E:\\Juegos\\Emulation\\AEL\\{}\\fanart".format(launcher.platform.name)),
-                ('path_title', "E:\\Juegos\\Emulation\\AEL\\{}\\titles".format(launcher.platform.name)),
-                ('path_snap', "E:\\Juegos\\Emulation\\AEL\\{}\\snap".format(launcher.platform.name)),
-                ('path_boxfront', "E:\\Juegos\\Emulation\\AEL\\{}\\boxfront".format(launcher.platform.name)),
-                ('path_boxback', "E:\\Juegos\\Emulation\\AEL\\{}\\boxback".format(launcher.platform.name)),
-                ('path_cartridge', "E:\\Juegos\\Emulation\\AEL\\{}\\cartridges".format(launcher.platform.name)),
-                ('path_flyer', "E:\\Juegos\\Emulation\\AEL\\{}\\flyers".format(launcher.platform.name)),
-                ('path_map', "E:\\Juegos\\Emulation\\AEL\\{}\\maps".format(launcher.platform.name)),
-                ('path_manual', "E:\\Juegos\\Emulation\\AEL\\{}\\manuals".format(launcher.platform.name)),
-                ('path_trailer', "E:\\Juegos\\Emulation\\AEL\\{}\\trailers".format(launcher.platform.name))
-            ))
 
 
 def generate_platform_folders(platforms_xml):
@@ -154,42 +81,7 @@ def generate_games(launcher):
     # loop in the games xml
     result = {}
     for game in launcher.games:
-        result[game.id] = {
-            'altapp':'',
-            'altarg':'',
-            'filename':game.path,
-            'disks':'',
-            'm_nplayers':'',
-            'finished':game.completed,
-            'id':game.id,
-            'm_genre':game.genre,
-            'm_name':game.name,
-            'm_plot':game.notes,
-            'm_rating':'',
-            'm_esrb':'',
-            'm_developer':game.developer,
-            'm_year':game.release_year,
-            'nointro_status':'',
-            's_map':'',
-            'pclone_status':''}
-
-        # these values are special in some way
-        if '://' in result[game.id]['filename']:
-            uri = result[game.id]['filename']
-            result[game.id]['altapp'] = get_associated_app(uri)
-            result[game.id]['altarg'] = uri
-            result[game.id]['filename'] = '.'
-        elif game.dosbox_conf:
-            result[game.id]['altapp'] = DOSBOX_EXE
-            result[game.id]['altarg'] = DOSBOX_ARGS.format(game.dosbox_conf)
-        elif game.emulator.id == 'Executables':
-            result[game.id]['altapp'] = result[game.id]['filename']
-            result[game.id]['altarg'] = ' '
-        else:
-            result[game.id]['filename'] = File([LBDIR, result[game.id]['filename']]).absolute
-        result[game.id]['m_year'] = result[game.id]['m_year'][:4]
-        result[game.id]['disks'] = []
-        result[game.id]['nointro_status'] = "None"
+        result[game.id] = dict(AELGame(game, DOSBOX_EXE, DOSBOX_ARGS))
     return result
 
 
@@ -286,7 +178,7 @@ def write_files(categories, launchers, games):
 
     for launcher in launchers:
         launcher_xml = ET.SubElement(root, "launcher")
-        for key,value in launcher_to_ael(launcher).items():
+        for key,value in launcher.items():
             ET.SubElement(launcher_xml, key).text = value
 
     tree = ET.ElementTree(root)
@@ -297,8 +189,7 @@ def write_files(categories, launchers, games):
     ###############################################
 
     single_launcher_xml_keys = ['id', 'm_name', 'categoryID', 'platform', 'rompath', 'romext']
-    for launcher in launchers:
-        launcher_ael = launcher_to_ael(launcher)
+    for launcher_ael in launchers:
         root = ET.Element("advanced_emulator_launcher_ROMs", version="1")
         launcher_xml = ET.SubElement(root, "launcher")
         for key,value in launcher_ael.items():
@@ -313,9 +204,8 @@ def write_files(categories, launchers, games):
     # generate games JSON files per launcher
     ###############################################
 
-    for launcher in launchers:
-        launcher_ael = launcher_to_ael(launcher)
-        games_data = games[launcher.id]
+    for launcher_ael in launchers:
+        games_data = games[launcher_ael.id]
         f_rom_base_noext = os.path.join(AELDIR, 'db_ROMs', '{}.json'.format(launcher_ael['roms_base_noext']))
         f = open(f_rom_base_noext, 'w')
         json.dump(games_data, f, indent=2)

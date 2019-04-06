@@ -2,10 +2,10 @@ import untangle
 from files.file import File
 
 class Game:
-    def __init__(self, game_xml_node, platform):
+    def __init__(self, game_xml_node, platform, lbdir):
         self.id = get_attribute_cdata(game_xml_node, 'ID')
         self.name = get_attribute_cdata(game_xml_node, 'Title')
-        self.path = get_attribute_cdata(game_xml_node, 'ApplicationPath')
+        self.path = File([lbdir, get_attribute_cdata(game_xml_node, 'ApplicationPath')]).absolute
         self.emulator = get_attribute_cdata(game_xml_node, 'Emulator', 'Executables')
         self.notes = get_attribute_cdata(game_xml_node, 'Notes')
         self.publisher = get_attribute_cdata(game_xml_node, 'Publisher')
@@ -22,12 +22,12 @@ class Game:
 
 
 class GamesCatalog:
-    def __init__(self, platforms_xml_dir, platforms, emulators):
+    def __init__(self, platforms_xml_dir, platforms, emulators, lbdir):
         games = {}
         for platform in platforms:
             games_xml = untangle.parse(File([platforms_xml_dir, '{}.xml'.format(platform.name)]).absolute)
             for game_xml_node in games_xml.LaunchBox.Game:
-                game = Game(game_xml_node, platform)
+                game = Game(game_xml_node, platform, lbdir)
                 game.emulator = emulators[game.emulator]
                 games[game.id] = game
             self.games = games

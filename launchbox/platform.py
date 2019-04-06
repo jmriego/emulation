@@ -1,21 +1,25 @@
 import untangle
 from hashlib import md5
-from files.file import File
+from files.file import File, find_files
 
 class Platform:
-    def __init__(self, platform_xml_node):
+    def __init__(self, platform_xml_node, images_dir):
         platform_name = get_attribute_cdata(platform_xml_node, 'Name')
         self.name = platform_name
         self.release_year = get_attribute_cdata(platform_xml_node, 'ReleaseDate')[:4]
         self.developer = get_attribute_cdata(platform_xml_node, 'Developer')
+        self.notes = get_attribute_cdata(platform_xml_node, 'Notes')
+        self.clear_logo_imgs = find_files([images_dir, 'Platforms', self.name, 'Clear Logo'], '*.*')
+        self.fanart_imgs = find_files([images_dir, 'Platforms', self.name, 'Fanart'], '*.*')
+        self.banner_imgs = find_files([images_dir, 'Platforms', self.name, 'Banner'], '*.*')
 
 
 class PlatformsCatalog:
-    def __init__(self, platform_xml_file, platform_categories_xml_file, categories):
+    def __init__(self, platform_xml_file, platform_categories_xml_file, categories, images_dir):
         platforms = {}
         platform_xml = untangle.parse(platform_xml_file)
         for platform_xml_node in platform_xml.LaunchBox.Platform:
-            platform = Platform(platform_xml_node)
+            platform = Platform(platform_xml_node, images_dir)
             platforms[platform.name] = platform
         self.platforms = platforms
 

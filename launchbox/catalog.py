@@ -40,7 +40,8 @@ class LaunchBox:
             self._platforms = PlatformsCatalog(
                     File([self.data_dir, "Platforms.xml"]).absolute,
                     File([self.data_dir, "Parents.xml"]).absolute,
-                    self.categories)
+                    self.categories,
+                    self.images_dir)
         return self._platforms
 
     @property
@@ -51,5 +52,6 @@ class LaunchBox:
             self._games = GamesCatalog(
                     File([self.data_dir, "Platforms"]).absolute,
                     self.platforms,
-                    self.emulators)
+                    self.emulators,
+                    self.base_dir)
         return self._games
