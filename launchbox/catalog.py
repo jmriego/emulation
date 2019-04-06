@@ -28,7 +28,8 @@ class LaunchBox:
         if self._categories is None:
             # platforms.xml has the categories inside
             self._categories = CategoriesCatalog(
-                    File([self.data_dir, "Platforms.xml"]).absolute)
+                    File([self.data_dir, "Platforms.xml"]).absolute,
+                    self.images_dir)
         return self._categories
 
     @property

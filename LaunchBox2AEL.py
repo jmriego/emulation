@@ -2,7 +2,8 @@ import os
 import ntpath as path
 from files.file import File, find_files
 from launchbox.catalog import LaunchBox
-from ael.launcher import LaunchersCatalog
+from ael.launcher import AELLaunchersCatalog
+from ael.category import Category as AELCategory
 import untangle
 from lxml import etree as ET
 import re
@@ -15,7 +16,7 @@ import configparser
 import unicodedata
 
 config = configparser.RawConfigParser()
-config.read('config.ini')
+config.read(File([os.path.dirname(__file__), 'config.ini']).absolute)
 
 LBDIR = config.get('launchbox', 'dir')
 AELDIR = os.path.expandvars(config.get('ael', 'dir'))
@@ -67,27 +68,6 @@ def find_first_file(startdir, pattern, mode='win'):
         return results[0]
     except IndexError:
         return None
-
-
-def category_to_ael(category):
-    category_ael = OrderedDict({})
-    category_ael['id'] = category.id
-    category_ael['m_name'] = category.name
-    category_ael['m_genre'] = category.name
-    category_ael['m_plot'] = category.notes
-    category_ael['m_rating'] = ""
-    category_ael['finished'] = "False"
-    category_ael['default_thumb'] = "s_icon"
-    category_ael['default_fanart'] = "s_fanart"
-    category_ael['default_banner'] = "s_banner"
-    category_ael['default_poster'] = "s_poster"
-    category_ael['s_icon'] = find_first_file([launchbox.images_dir, 'Platform Categories', category.name, 'Clear Logo'], '*.*')
-    category_ael['s_fanart'] = find_first_file([launchbox.images_dir, 'Platform Categories', category.name, 'Fanart'], '*.*')
-    category_ael['s_banner'] = find_first_file([launchbox.images_dir, 'Platform Categories', category.name, 'Banner'], '*.*')
-    category_ael['s_poster'] = ""
-    category_ael['s_clearlogo'] = find_first_file([launchbox.images_dir, 'Platform Categories', category.name, 'Clear Logo'], '*.*')
-    category_ael['s_trailer'] = ""
-    return category_ael
 
 
 def launcher_to_ael(launcher):
@@ -278,7 +258,7 @@ def generate_data():
     categories = launchbox.categories
     # the concept of launcher is the different emulators or direct executables under a platform in AEL
     # is not the same as in launchbox se we need to generate this
-    launchers = LaunchersCatalog(launchbox.games)
+    launchers = AELLaunchersCatalog(launchbox.games)
 
     platform_folders = generate_platform_folders(os.path.join(launchbox.data_dir, 'Platforms.xml'))
 
@@ -301,7 +281,7 @@ def write_files(categories, launchers, games):
 
     for category in categories:
         category_xml = ET.SubElement(root, "category")
-        for key,value in category_to_ael(category).items():
+        for key,value in AELCategory(category).items():
             ET.SubElement(category_xml, key).text = value
 
     for launcher in launchers:

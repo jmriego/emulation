@@ -1,19 +1,23 @@
 import untangle
 from hashlib import md5
+from files.file import find_files
 
 class Category:
-    def __init__(self, category_xml_node):
+    def __init__(self, category_xml_node, images_dir):
         self.name = category_xml_node.Name.cdata
         self.id = md5(self.name.encode()).hexdigest()
         self.notes = category_xml_node.Notes.cdata
+        self.clear_logo_imgs = find_files([images_dir, 'Platform Categories', self.name, 'Clear Logo'], '*.*')
+        self.fanart_imgs = find_files([images_dir, 'Platform Categories', self.name, 'Fanart'], '*.*')
+        self.banner_imgs = find_files([images_dir, 'Platform Categories', self.name, 'Banner'], '*.*')
 
 
 class CategoriesCatalog:
-    def __init__(self, category_xml_file):
+    def __init__(self, category_xml_file, images_dir):
         categories = {}
         category_xml = untangle.parse(category_xml_file)
         for category_xml_node in category_xml.LaunchBox.PlatformCategory:
-            category = Category(category_xml_node)
+            category = Category(category_xml_node, images_dir)
             categories[category.id] = category
 
         self.categories = categories
