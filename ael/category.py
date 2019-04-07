@@ -15,10 +15,10 @@ class Category(OrderedDict):
             ('default_banner', "s_banner"),
             ('default_poster', "s_poster"),
             # get the first file found or None
-            ('s_icon', (lb_category.clear_logo_imgs + [None])[0]),
-            ('s_fanart', (lb_category.fanart_imgs + [None])[0]),
-            ('s_banner', (lb_category.banner_imgs + [None])[0]),
+            ('s_icon', (lb_category.search_images('Clear Logo') + [None])[0]),
+            ('s_fanart', (lb_category.search_images('Fanart') + [None])[0]),
+            ('s_banner', (lb_category.search_images('Banner') + [None])[0]),
             ('s_poster', ""),
-            ('s_clearlogo', (lb_category.clear_logo_imgs + [None])[0]),
+            ('s_clearlogo', (lb_category.search_images('Clear Logo') + [None])[0]),
             ('s_trailer', "")
         ))

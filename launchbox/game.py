@@ -2,10 +2,11 @@ import untangle
 from files.file import File
 
 class Game:
-    def __init__(self, game_xml_node, platform, lbdir):
+    def __init__(self, game_xml_node, platform, lbdir, resources_catalog):
         self.id = get_attribute_cdata(game_xml_node, 'ID')
         self.name = get_attribute_cdata(game_xml_node, 'Title')
-        self.path = File([lbdir, get_attribute_cdata(game_xml_node, 'ApplicationPath')]).absolute
+        self.path_file = File([lbdir, get_attribute_cdata(game_xml_node, 'ApplicationPath')])
+        self.path = self.path_file.absolute
         self.emulator = get_attribute_cdata(game_xml_node, 'Emulator', 'Executables')
         self.notes = get_attribute_cdata(game_xml_node, 'Notes')
         self.publisher = get_attribute_cdata(game_xml_node, 'Publisher')
@@ -19,15 +20,19 @@ class Game:
         else:
             self.dosbox_conf = None
         self.platform = platform
+        self.resources_catalog = resources_catalog
+
+    def search_images(self, image_type):
+        return self.resources_catalog.search(image_type, game=self)
 
 
 class GamesCatalog:
-    def __init__(self, platforms_xml_dir, platforms, emulators, lbdir):
+    def __init__(self, platforms_xml_dir, platforms, emulators, lbdir, resources_catalog):
         games = {}
         for platform in platforms:
             games_xml = untangle.parse(File([platforms_xml_dir, '{}.xml'.format(platform.name)]).absolute)
             for game_xml_node in games_xml.LaunchBox.Game:
-                game = Game(game_xml_node, platform, lbdir)
+                game = Game(game_xml_node, platform, lbdir, resources_catalog)
                 game.emulator = emulators[game.emulator]
                 games[game.id] = game
             self.games = games

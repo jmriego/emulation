@@ -7,23 +7,23 @@ import time
 
 # launcher is the combination of platform and either an emulator id or executables
 class Launcher(OrderedDict):
-    def __init__(self, platform, emulator):
-        self.name = '{} ({})'.format(platform.name, emulator.name)
+    def __init__(self, lb_platform, emulator):
+        self.name = '{} ({})'.format(lb_platform.name, emulator.name)
         self.id = md5(self.name.encode()).hexdigest()
-        self.platform = platform
+        self.platform = lb_platform
         self.emulator = emulator
         self.games = []
         super(Launcher, self).__init__((
                 ('id', self.id),
-                ('m_name', platform.name),
-                ('categoryID', platform.category.id),
-                ('platform', platform.name),
+                ('m_name', lb_platform.name),
+                ('categoryID', lb_platform.category.id),
+                ('platform', lb_platform.name),
                 ('rompath', ""),
                 ('romext', ""),
-                ('m_year', platform.release_year),
+                ('m_year', lb_platform.release_year),
                 ('m_genre', ""),
-                ('m_studio', platform.developer),
-                ('m_plot', platform.notes),
+                ('m_studio', lb_platform.developer),
+                ('m_plot', lb_platform.notes),
                 ('m_rating', ""),
                 ('application', emulator.path),
                 ('args', emulator.args.format('$rom$')),
@@ -47,24 +47,24 @@ class Launcher(OrderedDict):
                 ('roms_default_banner', "s_banner"),
                 ('roms_default_poster', "s_poster"),
                 ('roms_default_clearlogo', "s_clearlogo"),
-                ('s_icon', (platform.banner_imgs + [None])[0]),
-                ('s_fanart', (platform.fanart_imgs + [None])[0]),
-                ('s_banner', (platform.banner_imgs + [None])[0]),
+                ('s_icon', (lb_platform.search_images('Banner') + [None])[0]),
+                ('s_fanart', (lb_platform.search_images('Fanart') + [None])[0]),
+                ('s_banner', (lb_platform.search_images('Banner') + [None])[0]),
                 ('s_poster', ""),
-                ('s_clearlogo', (platform.clear_logo_imgs + [None])[0]),
+                ('s_clearlogo', (lb_platform.search_images('Clear Logo') + [None])[0]),
                 ('s_trailer', ""), #TODO this and lower down
-                ('path_banner', "E:\\Juegos\\Emulation\\AEL\\{}\\banner".format(platform.name)),
-                ('path_clearlogo', "E:\\Juegos\\Emulation\\AEL\\{}\\clearlogo".format(platform.name)),
-                ('path_fanart', "E:\\Juegos\\Emulation\\AEL\\{}\\fanart".format(platform.name)),
-                ('path_title', "E:\\Juegos\\Emulation\\AEL\\{}\\titles".format(platform.name)),
-                ('path_snap', "E:\\Juegos\\Emulation\\AEL\\{}\\snap".format(platform.name)),
-                ('path_boxfront', "E:\\Juegos\\Emulation\\AEL\\{}\\boxfront".format(platform.name)),
-                ('path_boxback', "E:\\Juegos\\Emulation\\AEL\\{}\\boxback".format(platform.name)),
-                ('path_cartridge', "E:\\Juegos\\Emulation\\AEL\\{}\\cartridges".format(platform.name)),
-                ('path_flyer', "E:\\Juegos\\Emulation\\AEL\\{}\\flyers".format(platform.name)),
-                ('path_map', "E:\\Juegos\\Emulation\\AEL\\{}\\maps".format(platform.name)),
-                ('path_manual', "E:\\Juegos\\Emulation\\AEL\\{}\\manuals".format(platform.name)),
-                ('path_trailer', "E:\\Juegos\\Emulation\\AEL\\{}\\trailers".format(platform.name))
+                ('path_banner', "E:\\Juegos\\Emulation\\AEL\\{}\\banner".format(lb_platform.name)),
+                ('path_clearlogo', "E:\\Juegos\\Emulation\\AEL\\{}\\clearlogo".format(lb_platform.name)),
+                ('path_fanart', "E:\\Juegos\\Emulation\\AEL\\{}\\fanart".format(lb_platform.name)),
+                ('path_title', "E:\\Juegos\\Emulation\\AEL\\{}\\titles".format(lb_platform.name)),
+                ('path_snap', "E:\\Juegos\\Emulation\\AEL\\{}\\snap".format(lb_platform.name)),
+                ('path_boxfront', "E:\\Juegos\\Emulation\\AEL\\{}\\boxfront".format(lb_platform.name)),
+                ('path_boxback', "E:\\Juegos\\Emulation\\AEL\\{}\\boxback".format(lb_platform.name)),
+                ('path_cartridge', "E:\\Juegos\\Emulation\\AEL\\{}\\cartridges".format(lb_platform.name)),
+                ('path_flyer', "E:\\Juegos\\Emulation\\AEL\\{}\\flyers".format(lb_platform.name)),
+                ('path_map', "E:\\Juegos\\Emulation\\AEL\\{}\\maps".format(lb_platform.name)),
+                ('path_manual', "E:\\Juegos\\Emulation\\AEL\\{}\\manuals".format(lb_platform.name)),
+                ('path_trailer', "E:\\Juegos\\Emulation\\AEL\\{}\\trailers".format(lb_platform.name))
             ))
 
     def add_game(self, game):
