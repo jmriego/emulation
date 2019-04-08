@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from . import get_first_path
 
 
 class Category(OrderedDict):
@@ -15,10 +16,10 @@ class Category(OrderedDict):
             ('default_banner', "s_banner"),
             ('default_poster', "s_poster"),
             # get the first file found or None
-            ('s_icon', (lb_category.search_images('Clear Logo') + [None])[0]),
-            ('s_fanart', (lb_category.search_images('Fanart') + [None])[0]),
-            ('s_banner', (lb_category.search_images('Banner') + [None])[0]),
+            ('s_icon', get_first_path(lb_category.search_images('Clear Logo'))),
+            ('s_fanart', get_first_path(lb_category.search_images('Fanart'))),
+            ('s_banner', get_first_path(lb_category.search_images('Banner'))),
             ('s_poster', ""),
-            ('s_clearlogo', (lb_category.search_images('Clear Logo') + [None])[0]),
+            ('s_clearlogo', get_first_path(lb_category.search_images('Clear Logo'))),
             ('s_trailer', "")
         ))

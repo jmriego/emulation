@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from . import GAME_RESOURCE_TYPES
+from . import GAME_RESOURCE_TYPES, get_first_path
 import winreg
 import shlex
 
@@ -39,10 +39,10 @@ class Game(OrderedDict):
 
         for field, resource_types in GAME_RESOURCE_TYPES.items():
             for folder in resource_types:
-                self[field] = (lb_game.search_images(folder) + [None])[0]
+                self[field] = get_first_path(lb_game.search_images(folder))
 
-        self['s_manual'] = (lb_game.search_manuals() + [None])[0]
-        self['s_trailer'] = (lb_game.search_trailers() + [None])[0]
+        self['s_manual'] = get_first_path(lb_game.search_manuals())
+        self['s_trailer'] = get_first_path(lb_game.search_trailers())
 
         if '://' in self['filename']:
             uri = self['filename']

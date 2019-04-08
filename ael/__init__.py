@@ -1,5 +1,3 @@
-BAD_CHARS_IN_FILENAME = ":/'"
-
 # Prefered directories for each image type
 GAME_RESOURCE_TYPES = {
   's_banner': ['Banner', 'Steam Banner', 'Arcade - Marquee'],
@@ -15,3 +13,9 @@ GAME_RESOURCE_TYPES = {
   's_manual': ['Manuals'],
   's_trailer': ['Videos']
 }
+
+def get_first_path(files):
+    try:
+        return files[0].absolute
+    except IndexError:
+        return None

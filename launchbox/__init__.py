@@ -1,0 +1,1 @@
+BAD_CHARS_IN_FILENAME = ":/'"

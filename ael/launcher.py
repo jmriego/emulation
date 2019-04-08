@@ -3,6 +3,7 @@ from files.file import File
 from collections import OrderedDict
 import os
 from launchbox.resource import clean_filename
+from . import get_first_path
 import time
 
 
@@ -48,11 +49,11 @@ class Launcher(OrderedDict):
                 ('roms_default_banner', "s_banner"),
                 ('roms_default_poster', "s_poster"),
                 ('roms_default_clearlogo', "s_clearlogo"),
-                ('s_icon', (lb_platform.search_images('Banner') + [None])[0]),
-                ('s_fanart', (lb_platform.search_images('Fanart') + [None])[0]),
-                ('s_banner', (lb_platform.search_images('Banner') + [None])[0]),
+                ('s_icon', get_first_path(lb_platform.search_images('Banner'))),
+                ('s_fanart', get_first_path(lb_platform.search_images('Fanart'))),
+                ('s_banner', get_first_path(lb_platform.search_images('Banner'))),
                 ('s_poster', ""),
-                ('s_clearlogo', (lb_platform.search_images('Clear Logo') + [None])[0]),
+                ('s_clearlogo', get_first_path(lb_platform.search_images('Clear Logo'))),
                 ('s_trailer', ""),  # TODO this and lower down
                 ('path_banner', "E:\\Juegos\\Emulation\\AEL\\{}\\banner".format(lb_platform.name)),
                 ('path_clearlogo', "E:\\Juegos\\Emulation\\AEL\\{}\\clearlogo".format(lb_platform.name)),
