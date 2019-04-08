@@ -12,7 +12,7 @@ class Platform:
         self.notes = get_attribute_cdata(platform_xml_node, 'Notes')
 
     def search_images(self, image_type):
-        return self.resources_catalog.search(image_type, platform=self)
+        return self.resources_catalog.search_images(image_type, platform=self)
 
 
 class PlatformsCatalog:

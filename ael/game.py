@@ -28,6 +28,9 @@ class Game(OrderedDict):
             for folder in resource_types:
                 self[field] = (lb_game.search_images(folder) + [None])[0]
 
+        self['s_manual'] = (lb_game.search_manuals() + [None])[0]
+        self['s_trailer'] = (lb_game.search_trailers() + [None])[0]
+
         if '://' in self['filename']:
             uri = self['filename']
             self['altapp'] = get_associated_app(uri)

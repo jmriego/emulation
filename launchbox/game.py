@@ -23,8 +23,13 @@ class Game:
         self.resources_catalog = resources_catalog
 
     def search_images(self, image_type):
-        return self.resources_catalog.search(image_type, game=self)
+        return self.resources_catalog.search_images(image_type, game=self)
 
+    def search_manuals(self):
+        return self.resources_catalog.search_manuals(game=self)
+
+    def search_trailers(self):
+        return self.resources_catalog.search_trailers(game=self)
 
 class GamesCatalog:
     def __init__(self, platforms_xml_dir, platforms, emulators, lbdir, resources_catalog):

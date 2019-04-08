@@ -17,7 +17,7 @@ def get_resource_order(f):
         order = abs(int(f.suffix))
     except TypeError:
         order = 9999
-    return order
+    return (order, f.rootname)
 
 
 class ResourcesCatalog:
@@ -33,72 +33,58 @@ class ResourcesCatalog:
         # categories = {category_name{image_type}}
         # platforms = {platform_name{image_type}}
         # games = {platform_name{resource_type}}
-        self.categories = defaultdict(lambda:defaultdict(list))
-        self.platforms = defaultdict(lambda:defaultdict(list))
-        self.games = defaultdict(lambda:defaultdict(list))
+        self.categories = defaultdict(list)
+        self.platforms = defaultdict(list)
+        self.games = defaultdict(list)
         for f in image_files:
             if f.split_path[0] == 'Platform Categories' and len(f.split_path) >= 4:
                 category_name = f.split_path[1]
                 image_type = f.split_path[2]
-                self.categories[category_name][image_type].append(f)
+                self.categories[category_name, image_type].append(f)
             elif f.split_path[0] == 'Platforms' and len(f.split_path) >= 4:
                 platform_name = f.split_path[1]
                 image_type = f.split_path[2]
-                self.platforms[platform_name][image_type].append(f)
+                self.platforms[platform_name, image_type].append(f)
             elif len(f.split_path) >= 3:
                 platform_name = f.split_path[0]
                 image_type = f.split_path[1]
-                game = f.rootname_nosuffix
-                self.games[platform_name][image_type].append(f)
+                game = f.rootname_nosuffix.lower()
+                self.games[platform_name, game, image_type].append(f)
 
         # generate manuals
+        self.manuals = defaultdict(list)
         manual_files = find_files(manuals_dir, '*.*', as_file=True)
         for f in manual_files:
             if len(f.split_path) >= 2:
                 platform_name = f.split_path[0]
-                game = f.rootname_nosuffix
-                self.games[platform_name]['Manuals'].append(f)
+                game = f.rootname_nosuffix.lower()
+                self.manuals[platform_name, game].append(f)
 
         # generate trailers
+        self.trailers = defaultdict(list)
         trailer_files = find_files(trailers_dir, '*.*', as_file=True)
         for f in trailer_files:
             if len(f.split_path) >= 2:
                 platform_name = f.split_path[0]
-                game = f.rootname_nosuffix
-                self.games[platform_name]['Videos'].append(f)
+                game = f.rootname_nosuffix.lower()
+                self.trailers[platform_name, game].append(f)
 
 
-    def search(self, resource_type, platform=None, category=None, game=None, as_file=False):
-        try:
-            platform_name = platform.name
-        except AttributeError:
-            platform_name = platform
-
-        try:
-            category_name = category.name
-        except AttributeError:
-            category_name = category
-
-        try:
-            game_names = [game.name, game.path_file.rootname]
-            platform_name = game.platform.name
-        except AttributeError:
-            game_names = [game] if game else []
-
+    def search_images(self, resource_type, platform=None, category=None, game=None, as_file=False):
         result = []
-        try:
-            if game_names:
-                for game_name in game_names:
-                    for f in self.games[platform_name][resource_type]:
-                        if clean_filename(f.rootname_nosuffix).lower() == clean_filename(game_name).lower():
-                                result.append(f)
-                result.sort(key=get_resource_order)
-            elif platform_name:
-                result = sorted(self.platforms[platform_name][resource_type])
-            elif category_name:
-                result = sorted(self.categories[category_name][resource_type])
-        except KeyError:
-            return []
+        if game:
+            where = self.games
+            possible_file_names = [game.name, game.path_file.rootname]
+            platform_name = game.platform.name
+            for rootname in possible_file_names:
+                result += self.games[platform_name, rootname, resource_type]
+            result.sort(key=get_resource_order)
+        elif platform:
+            where = self.platforms
+            result = sorted(self.platforms[platform.name, resource_type])
+        elif category:
+            where = self.categories
+            result = sorted(self.categories[category.name, resource_type])
 
         if as_file:
             return result
@@ -106,3 +92,19 @@ class ResourcesCatalog:
             if result is None:
                 return []
             return [f.absolute for f in result]
+
+    def search_manuals(self, game, as_file=False):
+        result = (
+                self.manuals[game.platform.name, clean_filename(game.name).lower()]
+                + self.manuals[game.platform.name, clean_filename(game.path_file.rootname).lower()] )
+        return result
+
+    def search_trailers(self, game, as_file=False):
+        result = (
+                self.manuals[game.platform.name, clean_filename(game.name).lower()]
+                + self.manuals[game.platform.name, clean_filename(game.path_file.rootname).lower()] )
+
+        if as_file:
+            return result
+        else:
+            return

@@ -9,7 +9,7 @@ class Category:
         self.notes = category_xml_node.Notes.cdata
 
     def search_images(self, image_type):
-        return self.resources_catalog.search(image_type, category=self)
+        return self.resources_catalog.search_images(image_type, category=self)
 
 
 class CategoriesCatalog:
