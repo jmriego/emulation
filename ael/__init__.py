@@ -10,8 +10,6 @@ GAME_RESOURCE_TYPES = {
   's_poster': ['Advertisement Flyer - Front', 'Advertisement Flyer - Back'],
   's_snap': ['Screenshot - Gameplay'],
   's_title': ['Screenshot - Game Title'],
-  's_manual': ['Manuals'],
-  's_trailer': ['Videos']
 }
 
 def get_first_path(files):
