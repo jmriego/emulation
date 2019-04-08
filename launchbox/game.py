@@ -15,7 +15,7 @@ class Game:
         self.developer = get_attribute_cdata(game_xml_node, 'Developer')
         self.genre = get_attribute_cdata(game_xml_node, 'Genre')
         self.completed = get_attribute_cdata(game_xml_node, 'Completed')
-        if get_attribute_cdata(game_xml_node, 'UseDosBox') == 'True':
+        if get_attribute_cdata(game_xml_node, 'UseDosBox').lower() == 'true':
             self.dosbox_conf = get_attribute_cdata(game_xml_node, 'DosBoxConfigurationPath')
         else:
             self.dosbox_conf = None
