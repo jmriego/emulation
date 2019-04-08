@@ -6,7 +6,7 @@ class Game:
     def __init__(self, game_xml_node, platform, lbdir, resources_catalog):
         self.id = get_attribute_cdata(game_xml_node, 'ID')
         self.name = get_attribute_cdata(game_xml_node, 'Title')
-        self.path_file = File([lbdir, get_attribute_cdata(game_xml_node, 'ApplicationPath')])
+        self.path_file = File(get_attribute_cdata(game_xml_node, 'ApplicationPath'), lbdir)
         self.path = self.path_file.absolute
         self.emulator = get_attribute_cdata(game_xml_node, 'Emulator', 'Executables')
         self.notes = get_attribute_cdata(game_xml_node, 'Notes')
@@ -22,7 +22,15 @@ class Game:
             self.dosbox_conf = None
         self.platform = platform
         self.resources_catalog = resources_catalog
+        self.disks = []
 
+    def add_application(self, additional_xml_node):
+        use_emulator = get_attribute_cdata(additional_xml_node, 'UseEmulator').lower() == "true"
+        emulator_id = get_attribute_cdata(additional_xml_node, 'EmulatorId')
+        if use_emulator and emulator_id == self.emulator.id:
+            application_path = get_attribute_cdata(additional_xml_node, 'ApplicationPath')
+            self.disks.append(File(application_path, self.path_file.basedir))
+        
     def search_images(self, image_type):
         return self.resources_catalog.search_images(image_type, game=self)
 
@@ -42,6 +50,9 @@ class GamesCatalog:
                 game = Game(game_xml_node, platform, lbdir, resources_catalog)
                 game.emulator = emulators[game.emulator]
                 games[game.id] = game
+            for additional_xml_node in getattr(games_xml.LaunchBox, 'AdditionalApplication', []):
+                game_id = get_attribute_cdata(additional_xml_node, 'GameID')
+                games[game_id].add_application(additional_xml_node)
             self.games = games
 
     def __iter__(self):
