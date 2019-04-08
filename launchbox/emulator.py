@@ -1,5 +1,6 @@
 import untangle
 
+
 class Emulator:
     def __init__(self, emulator_xml_node, id=None, path=None, name=None):
         self.path = path if path else get_attribute_cdata(emulator_xml_node, 'ApplicationPath')

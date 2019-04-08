@@ -1,6 +1,5 @@
 import untangle
-from hashlib import md5
-from files.file import File
+
 
 class Platform:
     def __init__(self, platform_xml_node, resources_catalog):
@@ -29,7 +28,7 @@ class PlatformsCatalog:
         for parent_xml in platform_categories_xml.LaunchBox.Parent:
             # some nodes in parents.xml file seem to have incomplete information. ignore them
             try:
-                platform_name = getattr(parent_xml, 'PlatformName').cdata 
+                platform_name = getattr(parent_xml, 'PlatformName').cdata
             except AttributeError:
                 continue
             category_name = get_attribute_cdata(parent_xml, 'ParentPlatformCategoryName')

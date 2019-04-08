@@ -1,6 +1,7 @@
 import untangle
 from files.file import File
 
+
 class Game:
     def __init__(self, game_xml_node, platform, lbdir, resources_catalog):
         self.id = get_attribute_cdata(game_xml_node, 'ID')
@@ -30,6 +31,7 @@ class Game:
 
     def search_trailers(self):
         return self.resources_catalog.search_trailers(game=self)
+
 
 class GamesCatalog:
     def __init__(self, platforms_xml_dir, platforms, emulators, lbdir, resources_catalog):

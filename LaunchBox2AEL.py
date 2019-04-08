@@ -21,15 +21,7 @@ os.chdir(LBDIR)
 launchbox = LaunchBox(LBDIR)
 
 
-## Functions used
-def get_attribute_cdata(node, attribute, default=''):
-    try:
-        result = getattr(node, attribute).cdata
-    except:
-        result = default
-    return result if result else default
-
-
+# Functions used
 def generate_games(launcher):
     # loop in the games xml
     result = {}
@@ -38,7 +30,7 @@ def generate_games(launcher):
     return result
 
 
-## Main code
+# Main code
 def generate_data():
     categories = launchbox.categories
     # the concept of launcher is the different emulators or direct executables under a platform in AEL
@@ -61,12 +53,12 @@ def write_files(categories, launchers, games):
 
     for category in categories:
         category_xml = ET.SubElement(root, "category")
-        for key,value in AELCategory(category).items():
+        for key, value in AELCategory(category).items():
             ET.SubElement(category_xml, key).text = value
 
     for launcher in launchers:
         launcher_xml = ET.SubElement(root, "launcher")
-        for key,value in launcher.items():
+        for key, value in launcher.items():
             ET.SubElement(launcher_xml, key).text = value
 
     tree = ET.ElementTree(root)
@@ -80,13 +72,12 @@ def write_files(categories, launchers, games):
     for launcher_ael in launchers:
         root = ET.Element("advanced_emulator_launcher_ROMs", version="1")
         launcher_xml = ET.SubElement(root, "launcher")
-        for key,value in launcher_ael.items():
+        for key, value in launcher_ael.items():
             if key in single_launcher_xml_keys:
                 ET.SubElement(launcher_xml, key).text = value
         tree = ET.ElementTree(root)
         f_rom_base_noext = os.path.join(AELDIR, 'db_ROMs', '{}.xml'.format(launcher_ael['roms_base_noext']))
         tree.write(f_rom_base_noext, pretty_print=True)
-
 
     ###############################################
     # generate games JSON files per launcher
@@ -98,6 +89,7 @@ def write_files(categories, launchers, games):
         f = open(f_rom_base_noext, 'w')
         json.dump(games_data, f, indent=2)
         f.close()
+
 
 if __name__ == "__main__":
     categories, launchers, games = generate_data()

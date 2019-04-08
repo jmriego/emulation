@@ -1,8 +1,8 @@
 import unicodedata
-from files.file import File, find_files
+from files.file import find_files
 from collections import defaultdict
+from . import BAD_CHARS_IN_FILENAME
 
-BAD_CHARS_IN_FILENAME = ":/'"
 
 def clean_filename(filename):
     filename_no_bad_chars = ''.join('_' if c in BAD_CHARS_IN_FILENAME else c for c in filename)
@@ -87,20 +87,20 @@ class ResourcesCatalog:
             possible_file_names = [game.name, game.path_file.rootname]
             platform_name = game.platform.name
             for rootname in possible_file_names:
-                result += self.games.get(platform_name, rootname, resource_type, [])
+                result += self.games.get((platform_name, rootname, resource_type), [])
             result.sort(key=get_resource_order)
             return result
         elif platform:
-            return self.platforms.get(platform.name, resource_type, [])
+            return self.platforms.get((platform.name, resource_type), [])
         elif category:
-            return self.categories.get(category.name, resource_type, [])
+            return self.categories.get((category.name, resource_type), [])
 
     def search_manuals(self, game):
         result = []
         possible_file_names = [game.name, game.path_file.rootname]
         platform_name = game.platform.name
         for rootname in possible_file_names:
-            result += self.manuals.get(platform_name, rootname, resource_type, [])
+            result += self.manuals.get((platform_name, rootname), [])
         result.sort(key=get_resource_order)
         return result
 
@@ -109,6 +109,6 @@ class ResourcesCatalog:
         possible_file_names = [game.name, game.path_file.rootname]
         platform_name = game.platform.name
         for rootname in possible_file_names:
-            result += self.trailers.get(platform_name, rootname, resource_type, [])
+            result += self.trailers.get((platform_name, rootname), [])
         result.sort(key=get_resource_order)
         return result

@@ -2,8 +2,9 @@ from hashlib import md5
 from files.file import File
 from collections import OrderedDict
 import os
-from .utils import clean_filename
+from launchbox.resource import clean_filename
 import time
+
 
 # launcher is the combination of platform and either an emulator id or executables
 class Launcher(OrderedDict):
@@ -52,7 +53,7 @@ class Launcher(OrderedDict):
                 ('s_banner', (lb_platform.search_images('Banner') + [None])[0]),
                 ('s_poster', ""),
                 ('s_clearlogo', (lb_platform.search_images('Clear Logo') + [None])[0]),
-                ('s_trailer', ""), #TODO this and lower down
+                ('s_trailer', ""),  # TODO this and lower down
                 ('path_banner', "E:\\Juegos\\Emulation\\AEL\\{}\\banner".format(lb_platform.name)),
                 ('path_clearlogo', "E:\\Juegos\\Emulation\\AEL\\{}\\clearlogo".format(lb_platform.name)),
                 ('path_fanart', "E:\\Juegos\\Emulation\\AEL\\{}\\fanart".format(lb_platform.name)),

@@ -1,6 +1,7 @@
 import untangle
 from hashlib import md5
 
+
 class Category:
     def __init__(self, category_xml_node, resources_catalog):
         self.resources_catalog = resources_catalog

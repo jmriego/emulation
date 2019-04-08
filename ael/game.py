@@ -1,6 +1,19 @@
-from files.file import File
 from collections import OrderedDict
 from . import GAME_RESOURCE_TYPES
+import winreg
+import shlex
+
+
+def get_associated_app(uri):
+    prefix, game = uri.split('://')
+    key = r'{}\Shell\Open\Command'.format(prefix)
+    try:
+        command = winreg.QueryValue(winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, key), None)
+        app, params = shlex.split(command)
+    except OSError:
+        app = None
+    return app
+
 
 # launcher is the combination of platform and either an emulator id or executables
 class Game(OrderedDict):
@@ -42,4 +55,4 @@ class Game(OrderedDict):
         elif lb_game.emulator.id == 'Executables':
             self['altapp'] = self['filename']
             self['altarg'] = ' '
-        self['disks'] = [] #TODO
+        self['disks'] = []  # TODO

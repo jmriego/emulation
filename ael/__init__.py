@@ -1,6 +1,6 @@
 BAD_CHARS_IN_FILENAME = ":/'"
 
-## Prefered directories for each image type
+# Prefered directories for each image type
 GAME_RESOURCE_TYPES = {
   's_banner': ['Banner', 'Steam Banner', 'Arcade - Marquee'],
   's_flyer': ['Advertisement Flyer - Front'],

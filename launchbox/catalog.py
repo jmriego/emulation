@@ -1,10 +1,10 @@
 from files.file import File
-import untangle
-from launchbox.emulator import Emulator, EmulatorCatalog
-from launchbox.category import Category, CategoriesCatalog
-from launchbox.platform import Platform, PlatformsCatalog
-from launchbox.game import Game, GamesCatalog
+from launchbox.emulator import EmulatorCatalog
+from launchbox.category import CategoriesCatalog
+from launchbox.platform import PlatformsCatalog
+from launchbox.game import GamesCatalog
 from launchbox.resource import ResourcesCatalog
+
 
 class LaunchBox:
     def __init__(self, lb_dir):

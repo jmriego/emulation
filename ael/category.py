@@ -1,5 +1,5 @@
-from hashlib import md5
 from collections import OrderedDict
+
 
 class Category(OrderedDict):
     def __init__(self, lb_category):

@@ -5,9 +5,10 @@ import re
 
 file_suffix = re.compile('-[0-9]+$')
 
+
 class File:
     def __init__(self, f, basedir='', mode='win'):
-        path = ntpath if mode=='win' else os.path
+        path = ntpath if mode == 'win' else os.path
         self.mode = mode
         if isinstance(f, list):
             f = path.join(*f)
@@ -25,13 +26,13 @@ class File:
             self.suffix = file_suffix.search(self.rootname).group(0)
             self.rootname_nosuffix = self.rootname[:-len(self.suffix)]
         except AttributeError:
-            self.suffix  = None
+            self.suffix = None
             self.rootname_nosuffix = self.rootname
 
     @property
     def split_path(self):
         if not hasattr(self, '_split_path'):
-            path = ntpath if self.mode=='win' else os.path
+            path = ntpath if self.mode == 'win' else os.path
             drive, head = path.splitdrive(self.path)
             normalized_path = path.normpath(head)
             self._split_path = normalized_path.split(path.sep)
@@ -51,13 +52,13 @@ class File:
 
     @property
     def absolute_dir(self):
-        path = ntpath if self.mode=='win' else os.path
+        path = ntpath if self.mode == 'win' else os.path
         path_split = self.split_path
         return path.abspath(path.join(*path_split[:-1]))
 
     @property
     def absolute(self):
-        path = ntpath if self.mode=='win' else os.path
+        path = ntpath if self.mode == 'win' else os.path
         path_split = self.split_path
         return path.abspath(path.join(self.basedir, *path_split))
 
@@ -76,16 +77,16 @@ class File:
 
 
 def find_files(startdir, pattern, mode='win', as_file=False):
-    path = ntpath if mode=='win' else os.path
+    path = ntpath if mode == 'win' else os.path
     startdir = File(startdir).absolute
     results = []
     for base, dirs, files in os.walk(startdir):
         goodfiles = fnmatch.filter(files, pattern)
         if as_file:
             rel_dir = path.relpath(base, startdir)
-            results.extend(File([rel_dir,f], basedir=startdir) for f in goodfiles)
+            results.extend(File([rel_dir, f], basedir=startdir) for f in goodfiles)
         else:
-            results.extend(File([base,f]).absolute for f in goodfiles)
+            results.extend(File([base, f]).absolute for f in goodfiles)
     return results
 
 
