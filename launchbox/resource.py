@@ -84,7 +84,7 @@ class ResourcesCatalog:
     def search_images(self, resource_type, platform=None, category=None, game=None, as_file=False):
         if game:
             result = []
-            possible_file_names = [game.name, game.path_file.rootname]
+            possible_file_names = [game.name, game.rom.rootname]
             platform_name = game.platform.name
             for rootname in possible_file_names:
                 clean_rootname = clean_filename(rootname).lower()
@@ -98,7 +98,7 @@ class ResourcesCatalog:
 
     def search_manuals(self, game):
         result = []
-        possible_file_names = [game.name, game.path_file.rootname]
+        possible_file_names = [game.name, game.rom.rootname]
         platform_name = game.platform.name
         for rootname in possible_file_names:
             clean_rootname = clean_filename(rootname).lower()
@@ -108,7 +108,7 @@ class ResourcesCatalog:
 
     def search_trailers(self, game):
         result = []
-        possible_file_names = [game.name, game.path_file.rootname]
+        possible_file_names = [game.name, game.rom.rootname]
         platform_name = game.platform.name
         for rootname in possible_file_names:
             clean_rootname = clean_filename(rootname).lower()

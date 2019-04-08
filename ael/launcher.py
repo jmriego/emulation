@@ -1,5 +1,4 @@
 from hashlib import md5
-from files.file import File
 from collections import OrderedDict
 import os
 from launchbox.resource import clean_filename
@@ -80,18 +79,16 @@ class Launcher(OrderedDict):
     def paths(self):
         paths = set()
         for game in self.games:
-            if '://' not in game.path:
-                f = File(game.path)
-                paths.add(f.absolute_dir)
+            if '://' not in game.rom.path:
+                paths.add(game.rom.absolute_dir)
         return paths
 
     @property
     def extensions(self):
         extensions = set()
         for game in self.games:
-            if '://' not in game.path:
-                f = File(game.path)
-                extensions.add(f.extension)
+            if '://' not in game.rom.path:
+                extensions.add(game.rom.extension)
         return extensions
 
 

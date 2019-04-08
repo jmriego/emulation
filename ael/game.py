@@ -21,7 +21,7 @@ class Game(OrderedDict):
         super(Game, self).__init__((
             ('altapp', ''),
             ('altarg', ''),
-            ('filename', lb_game.path),
+            ('filename', lb_game.rom.absolute),
             ('m_nplayers', ''),
             ('finished', lb_game.completed),
             ('id', lb_game.id),

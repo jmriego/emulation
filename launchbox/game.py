@@ -6,8 +6,7 @@ class Game:
     def __init__(self, game_xml_node, platform, lbdir, resources_catalog):
         self.id = get_attribute_cdata(game_xml_node, 'ID')
         self.name = get_attribute_cdata(game_xml_node, 'Title')
-        self.path_file = File(get_attribute_cdata(game_xml_node, 'ApplicationPath'), lbdir)
-        self.path = self.path_file.absolute
+        self.rom = File(get_attribute_cdata(game_xml_node, 'ApplicationPath'), lbdir)
         self.emulator = get_attribute_cdata(game_xml_node, 'Emulator', 'Executables')
         self.notes = get_attribute_cdata(game_xml_node, 'Notes')
         self.publisher = get_attribute_cdata(game_xml_node, 'Publisher')
@@ -29,7 +28,7 @@ class Game:
         emulator_id = get_attribute_cdata(additional_xml_node, 'EmulatorId')
         if use_emulator and emulator_id == self.emulator.id:
             application_path = get_attribute_cdata(additional_xml_node, 'ApplicationPath')
-            self.disks.append(File(application_path, self.path_file.basedir))
+            self.disks.append(File(application_path, self.rom.basedir))
         
     def search_images(self, image_type):
         return self.resources_catalog.search_images(image_type, game=self)
