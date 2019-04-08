@@ -38,11 +38,11 @@ class Game(OrderedDict):
             ))
 
         for field, resource_types in GAME_RESOURCE_TYPES.items():
+            found_imgs = []
             for folder in resource_types:
-                found_img = get_first_path(lb_game.search_images(folder))
-                if found_img:
-                    self[field] = found_img
-                    break
+                found_imgs += lb_game.search_images(folder)
+            self[field] = get_first_path(found_imgs)
+
 
         self['s_manual'] = get_first_path(lb_game.search_manuals())
         self['s_trailer'] = get_first_path(lb_game.search_trailers())
