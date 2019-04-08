@@ -18,4 +18,4 @@ def get_first_path(files):
     try:
         return files[0].absolute
     except IndexError:
-        return None
+        return ''

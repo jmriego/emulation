@@ -87,7 +87,8 @@ class ResourcesCatalog:
             possible_file_names = [game.name, game.path_file.rootname]
             platform_name = game.platform.name
             for rootname in possible_file_names:
-                result += self.games.get((platform_name, rootname, resource_type), [])
+                clean_rootname = clean_filename(rootname).lower()
+                result += self.games.get((platform_name, clean_rootname, resource_type), [])
             result.sort(key=get_resource_order)
             return result
         elif platform:
@@ -100,7 +101,8 @@ class ResourcesCatalog:
         possible_file_names = [game.name, game.path_file.rootname]
         platform_name = game.platform.name
         for rootname in possible_file_names:
-            result += self.manuals.get((platform_name, rootname), [])
+            clean_rootname = clean_filename(rootname).lower()
+            result += self.manuals.get((platform_name, clean_rootname), [])
         result.sort(key=get_resource_order)
         return result
 
@@ -109,6 +111,7 @@ class ResourcesCatalog:
         possible_file_names = [game.name, game.path_file.rootname]
         platform_name = game.platform.name
         for rootname in possible_file_names:
-            result += self.trailers.get((platform_name, rootname), [])
+            clean_rootname = clean_filename(rootname).lower()
+            result += self.trailers.get((platform_name, clean_rootname), [])
         result.sort(key=get_resource_order)
         return result
