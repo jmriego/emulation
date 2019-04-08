@@ -3,6 +3,7 @@ dir=C:\LaunchBox
 
 [ael]
 dir=%LOCALAPPDATA%\Packages\XBMCFoundation.Kodi_4n2hpmxwrvr6p\LocalCache\Roaming\Kodi\userdata\addon_data\plugin.program.advanced.emulator.launcher
+# dir=%APPDATA%\kodi\userdata\addon_data\plugin.program.advanced.emulator.launcher
 
 [dosbox]
 exe=C:\DosBox\dosbox.exe
