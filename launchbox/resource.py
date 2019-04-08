@@ -86,9 +86,12 @@ class ResourcesCatalog:
             result = []
             possible_file_names = [game.name, game.rom.rootname]
             platform_name = game.platform.name
+            already_checked = set()
             for rootname in possible_file_names:
                 clean_rootname = clean_filename(rootname).lower()
-                result += self.games.get((platform_name, clean_rootname, resource_type), [])
+                if clean_rootname not in already_checked:
+                    result += self.games.get((platform_name, clean_rootname, resource_type), [])
+                    already_checked.add(clean_rootname)
             result.sort(key=get_resource_order)
             return result
         elif platform:
@@ -100,9 +103,12 @@ class ResourcesCatalog:
         result = []
         possible_file_names = [game.name, game.rom.rootname]
         platform_name = game.platform.name
+        already_checked = set()
         for rootname in possible_file_names:
             clean_rootname = clean_filename(rootname).lower()
-            result += self.manuals.get((platform_name, clean_rootname), [])
+            if clean_rootname not in already_checked:
+                result += self.manuals.get((platform_name, clean_rootname), [])
+                already_checked.add(clean_rootname)
         result.sort(key=get_resource_order)
         return result
 
@@ -110,8 +116,11 @@ class ResourcesCatalog:
         result = []
         possible_file_names = [game.name, game.rom.rootname]
         platform_name = game.platform.name
+        already_checked = set()
         for rootname in possible_file_names:
             clean_rootname = clean_filename(rootname).lower()
-            result += self.trailers.get((platform_name, clean_rootname), [])
+            if clean_rootname not in already_checked:
+                result += self.trailers.get((platform_name, clean_rootname), [])
+                already_checked.add(clean_rootname)
         result.sort(key=get_resource_order)
         return result

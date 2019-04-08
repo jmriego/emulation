@@ -1,34 +1,32 @@
 from __future__ import print_function
 import wx
-from LaunchBox2AEL import generate_launchers, generate_platform_folders, generate_game_resources, generate_data, get_game_resources, FOLDER_RESOURCE_TYPES, LBDIR
+# from LaunchBox2AEL import generate_launchers, generate_platform_folders, generate_game_resources, generate_data, get_game_resources, FOLDER_RESOURCE_TYPES, LBDIR
+from LaunchBox2AEL import LBDIR
 from launchbox.catalog import LaunchBox
 from files.file import File, rename_files
+from ael import GAME_RESOURCE_TYPES
+from collections import defaultdict
 ##
 
 launchbox = LaunchBox(LBDIR)
 
-launchers = generate_launchers(File([launchbox.data_dir, 'Platforms.xml']).absolute, File([launchbox.data_dir, 'Parents.xml']).absolute)
-platform_folders = generate_platform_folders(File([launchbox.data_dir, 'Platforms.xml']).absolute)
-duplicate_resources = {}
+duplicate_resources = defaultdict(lambda: defaultdict(list))
 file_properties = {}
 possible_platforms = set()
 possible_resource_types = set()
 possible_platforms.add('(Any)')
 possible_resource_types.add('(Any)')
-resource_to_platform_type = {}
-for launcher, launcher_dict in launchers.items():
-    platform_name = launcher_dict['platform']
-    game_resources_platform = generate_game_resources(platform_folders[platform_name])
-    for game_name, resources in game_resources_platform.items():
-        for resource_type, filelist in resources.items():
-            if len(filelist) > 1:
-                if not (platform_name, resource_type) in duplicate_resources:
-                    duplicate_resources[(platform_name, resource_type)] = {}
-                duplicate_resources[(platform_name, resource_type)][game_name] = filelist
-                possible_platforms.add(platform_name)
-                possible_resource_types.add(resource_type)
-            for f in filelist:
-                file_properties[f] = (platform_name, resource_type, game_name)
+
+for folder in [folder for res_type in GAME_RESOURCE_TYPES.values() for folder in res_type]:
+    for game in launchbox.games:
+        filelist = [f.absolute for f in game.search_images(folder)]
+        if len(filelist) > 1:
+            duplicate_resources[(game.platform.name, folder)][game.name] = filelist
+            possible_platforms.add(game.platform.name)
+            possible_resource_types.add(folder)
+        for f in filelist:
+            file_properties[f] = (game.platform.name, folder, game.name)
+
 possible_platforms = sorted(list(possible_platforms))
 possible_resource_types = sorted(list(possible_resource_types))
 
@@ -406,24 +404,20 @@ class TestFrame(wx.Frame):
         print("", file=f)
 
     def PrintCSVFoundResources(self, f):
-        resource_types = list(folder_resource_types.keys())
-        # print header
-        header = ['platform', 'game'] + resource_types
+        header = ['platform', 'game'] + list(GAME_RESOURCE_TYPES.keys()) + ['s_manual', 's_trailer']
         self.PrintCSVLine(header, f)
 
         # generate lines with games and their number of resources found by type
-        platform_folders = generate_platform_folders(File([launchbox.data_dir, 'Platforms.xml']).absolute)
-        categories, launchers, games = generate_data()
-        for launcher, launcher_dict in launchers.items():
-            game_resources = generate_game_resources(platform_folders[launcher_dict['platform']])
-            for game_id, game_details in games[launcher].items():
-                m_name = game_details['m_name']
-                line = [launcher_dict['platform'], m_name]
-                for resource_type in resource_types:
-                    resource_folders = folder_resource_types[resource_type]
-                    line.append(str(len(get_game_resources(game_details, game_resources, resource_folders))))
-
-                self.PrintCSVLine(line, f)
+        for game in launchbox.games:
+            line = [game.platform.name, game.name]
+            for resource_type, folders in GAME_RESOURCE_TYPES.items():
+                found_images = []
+                for folder in folders:
+                    found_images += game.search_images(folder)
+                line.append(str(len(found_images)))
+            line.append(str(len(game.search_manuals())))
+            line.append(str(len(game.search_trailers())))
+            self.PrintCSVLine(line, f)
 
     def onChoice(self, event):
         self.chosen_platform = self._combo_platforms.GetString(self._combo_platforms.GetSelection())
