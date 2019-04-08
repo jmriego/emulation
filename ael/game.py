@@ -55,4 +55,4 @@ class Game(OrderedDict):
         elif lb_game.emulator.id == 'Executables':
             self['altapp'] = self['filename']
             self['altarg'] = ' '
-        self['disks'] = []  # TODO
+        self['disks'] = [f.absolute for f in lb_game.disks]
