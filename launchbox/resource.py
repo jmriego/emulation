@@ -1,6 +1,6 @@
 import unicodedata
 from files.file import find_files
-from collections import defaultdict
+from collections import namedtuple
 from . import BAD_CHARS_IN_FILENAME
 
 
@@ -20,107 +20,82 @@ def get_resource_order(f):
     return (order, f.rootname)
 
 
-def insert_ordered(resources_list, f):
-    lo = 0
-    hi = len(resources_list)
-    while lo < hi:
-        mid = (lo+hi)//2
-        if get_resource_order(f) < get_resource_order(resources_list[mid]):
-            hi = mid
-        else:
-            lo = mid+1
-    resources_list.insert(lo, f)
+# these namedtuples will be used as the keys for the dict in ResourcesCatalog.resources
+PlatformCategorySearch = namedtuple('PlatformSearch', 'category resource_type')
+PlatformSearch = namedtuple('PlatformSearch', 'platform resource_type')
+# game also includes the platform as there may be games with the same name in different platforms
+GameSearch = namedtuple('PlatformSearch', 'platform game resource_type')
+# for manuals and trailers we specify the resource type instead of getting it from the folder name
+MANUAL_RESOURCE_TYPE = 'Manual'
+TRAILER_RESOURCE_TYPE = 'Trailer'
 
 
 class ResourcesCatalog:
     def __init__(self, images_dir, manuals_dir, trailers_dir):
-        self.images_dir = images_dir
-        self.manuals_dir = manuals_dir
-        self.trailers_dir = trailers_dir
+        self.resources = {}
+        self.fields = []
 
-        # generate images
-        image_files = find_files(images_dir, '*.*', as_file=True)
+        # loop folders with images, manuals and trailers
+        # saving files in the self.resources dict using the namedtuples as keys
+        # the files use a naming convention so we can later query them using
+        # platform names, game names, etc.
 
-        # nested dictionaries. The internal level defaults to an empty list
-        # categories = {category_name{image_type}}
-        # platforms = {platform_name{image_type}}
-        # games = {platform_name{resource_type}}
-        self.categories = defaultdict(list)
-        self.platforms = defaultdict(list)
-        self.games = defaultdict(list)
-        for f in image_files:
+        for f in find_files(images_dir, '*.*', as_file=True):
             if f.split_path[0] == 'Platform Categories' and len(f.split_path) >= 4:
-                category_name = f.split_path[1]
-                image_type = f.split_path[2]
-                insert_ordered(self.categories[category_name, image_type], f)
+                self.add_resource(
+                        f,
+                        PlatformCategorySearch(f.split_path[1], f.split_path[2]))
             elif f.split_path[0] == 'Platforms' and len(f.split_path) >= 4:
-                platform_name = f.split_path[1]
-                image_type = f.split_path[2]
-                insert_ordered(self.platforms[platform_name, image_type], f)
+                self.add_resource(
+                        f,
+                        PlatformSearch(f.split_path[1], f.split_path[2]))
             elif len(f.split_path) >= 3:
-                platform_name = f.split_path[0]
-                image_type = f.split_path[1]
-                game = clean_filename(f.rootname_nosuffix).lower()
-                insert_ordered(self.games[platform_name, game, image_type], f)
+                self.add_resource(
+                        f,
+                        GameSearch(f.split_path[0], f.rootname_nosuffix, f.split_path[1]))
 
-        # generate manuals
-        self.manuals = defaultdict(list)
-        manual_files = find_files(manuals_dir, '*.*', as_file=True)
-        for f in manual_files:
+        for f in find_files(manuals_dir, '*.*', as_file=True):
             if len(f.split_path) >= 2:
-                platform_name = f.split_path[0]
-                game = clean_filename(f.rootname_nosuffix).lower()
-                insert_ordered(self.manuals[platform_name, game], f)
+                self.add_resource(f,
+                        GameSearch(f.split_path[0], f.rootname_nosuffix, MANUAL_RESOURCE_TYPE))
 
-        # generate trailers
-        self.trailers = defaultdict(list)
-        trailer_files = find_files(trailers_dir, '*.*', as_file=True)
-        for f in trailer_files:
+        for f in find_files(trailers_dir, '*.*', as_file=True):
             if len(f.split_path) >= 2:
-                platform_name = f.split_path[0]
-                game = clean_filename(f.rootname_nosuffix).lower()
-                insert_ordered(self.trailers[platform_name, game], f)
+                self.add_resource(f,
+                        GameSearch(f.split_path[0], f.rootname_nosuffix, TRAILER_RESOURCE_TYPE))
 
-    def search_images(self, resource_type, platform=None, category=None, game=None, as_file=False):
+    # this method will generate based on the passed gaame, platform or category,
+    # the namedtuple(s) that could have been used when adding that file in __init__
+    def get_keys(self, resource_type, platform=None, category=None, game=None):
         if game:
-            result = []
-            possible_file_names = [game.name, game.rom.rootname]
-            platform_name = game.platform.name
-            already_checked = set()
-            for rootname in possible_file_names:
-                clean_rootname = clean_filename(rootname).lower()
-                if clean_rootname not in already_checked:
-                    result += self.games.get((platform_name, clean_rootname, resource_type), [])
-                    already_checked.add(clean_rootname)
-            result.sort(key=get_resource_order)
-            return result
+            # the resources for games can be named either with the game name or the rom file
+            return [GameSearch(game.platform.name, game.name, resource_type),
+                    GameSearch(game.platform.name, game.rom.rootname, resource_type)]
         elif platform:
-            return self.platforms.get((platform.name, resource_type), [])
+            return [PlatformSearch(platform.name, resource_type)]
         elif category:
-            return self.categories.get((category.name, resource_type), [])
+            return [PlatformCategorySearch(category.name, resource_type)]
 
-    def search_manuals(self, game):
+    def search_resources(self, resource_type, **kwargs):
         result = []
-        possible_file_names = [game.name, game.rom.rootname]
-        platform_name = game.platform.name
         already_checked = set()
-        for rootname in possible_file_names:
-            clean_rootname = clean_filename(rootname).lower()
-            if clean_rootname not in already_checked:
-                result += self.manuals.get((platform_name, clean_rootname), [])
-                already_checked.add(clean_rootname)
+        possible_keys = self.get_keys(resource_type, **kwargs)
+        for keys in possible_keys:
+            clean_keys = tuple(clean_filename(x).lower() for x in keys)
+            if clean_keys not in already_checked:
+                already_checked.add(clean_keys)
+                result += self.resources.get(clean_keys, [])
         result.sort(key=get_resource_order)
         return result
 
-    def search_trailers(self, game):
-        result = []
-        possible_file_names = [game.name, game.rom.rootname]
-        platform_name = game.platform.name
-        already_checked = set()
-        for rootname in possible_file_names:
-            clean_rootname = clean_filename(rootname).lower()
-            if clean_rootname not in already_checked:
-                result += self.trailers.get((platform_name, clean_rootname), [])
-                already_checked.add(clean_rootname)
-        result.sort(key=get_resource_order)
-        return result
+    def search_images(self, resource_type, **kwargs):
+        return self.search_resources(resource_type, **kwargs)
+
+    def search_manuals(self, **kwargs):
+        return self.search_resources(MANUAL_RESOURCE_TYPE, **kwargs)
+
+    def search_trailers(self, **kwargs):
+        return self.search_resources(TRAILER_RESOURCE_TYPE, **kwargs)
+
+    def add_resource(self, f, keys):
+        self.resources.setdefault(tuple(clean_filename(x).lower() for x in keys), []).append(f)
