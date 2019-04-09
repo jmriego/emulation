@@ -20,107 +20,91 @@ def get_resource_order(f):
     return (order, f.rootname)
 
 
-def insert_ordered(resources_list, f):
-    lo = 0
-    hi = len(resources_list)
-    while lo < hi:
-        mid = (lo+hi)//2
-        if get_resource_order(f) < get_resource_order(resources_list[mid]):
-            hi = mid
-        else:
-            lo = mid+1
-    resources_list.insert(lo, f)
-
-
 class ResourcesCatalog:
     def __init__(self, images_dir, manuals_dir, trailers_dir):
-        self.images_dir = images_dir
-        self.manuals_dir = manuals_dir
-        self.trailers_dir = trailers_dir
+        self.resources = defaultdict(list)
+        self.fields = []
+        return
 
-        # generate images
-        image_files = find_files(images_dir, '*.*', as_file=True)
-
-        # nested dictionaries. The internal level defaults to an empty list
-        # categories = {category_name{image_type}}
-        # platforms = {platform_name{image_type}}
-        # games = {platform_name{resource_type}}
-        self.categories = defaultdict(list)
-        self.platforms = defaultdict(list)
-        self.games = defaultdict(list)
-        for f in image_files:
+    # save images
+        for f in find_files(images_dir, '*.*', as_file=True):
             if f.split_path[0] == 'Platform Categories' and len(f.split_path) >= 4:
-                category_name = f.split_path[1]
-                image_type = f.split_path[2]
-                insert_ordered(self.categories[category_name, image_type], f)
+                self.add_resource(
+                        f,
+                        category=f.split_path[1],
+                        resource_type=f.split_path[2])
             elif f.split_path[0] == 'Platforms' and len(f.split_path) >= 4:
-                platform_name = f.split_path[1]
-                image_type = f.split_path[2]
-                insert_ordered(self.platforms[platform_name, image_type], f)
+                self.add_resource(
+                        f,
+                        platform=f.split_path[1],
+                        resource_type=f.split_path[2])
             elif len(f.split_path) >= 3:
-                platform_name = f.split_path[0]
-                image_type = f.split_path[1]
-                game = f.rootname_nosuffix.lower()
-                insert_ordered(self.games[platform_name, game, image_type], f)
+                self.add_resource(
+                        f,
+                        platform=f.split_path[0],
+                        game=f.rootname_nosuffix,
+                        resource_type=f.split_path[1])
 
-        # generate manuals
-        self.manuals = defaultdict(list)
-        manual_files = find_files(manuals_dir, '*.*', as_file=True)
-        for f in manual_files:
+        # save manuals
+        for f in find_files(manuals_dir, '*.*', as_file=True):
             if len(f.split_path) >= 2:
-                platform_name = f.split_path[0]
-                game = f.rootname_nosuffix.lower()
-                insert_ordered(self.manuals[platform_name, game], f)
+                self.add_resource(f,
+                    platform=f.split_path[0],
+                    game=f.rootname_nosuffix,
+                    resource_type='Manual')
 
-        # generate trailers
-        self.trailers = defaultdict(list)
-        trailer_files = find_files(trailers_dir, '*.*', as_file=True)
-        for f in trailer_files:
+        # save trailers
+        for f in find_files(trailers_dir, '*.*', as_file=True):
             if len(f.split_path) >= 2:
-                platform_name = f.split_path[0]
-                game = f.rootname_nosuffix.lower()
-                insert_ordered(self.trailers[platform_name, game], f)
+                self.add_resource(f,
+                    platform=f.split_path[0],
+                    game=f.rootname_nosuffix,
+                    resource_type='Trailer')
 
-    def search_images(self, resource_type, platform=None, category=None, game=None, as_file=False):
+    def get_keys(self, resource_type, platform=None, category=None, game=None):
         if game:
-            result = []
-            possible_file_names = [game.name, game.rom.rootname]
-            platform_name = game.platform.name
-            already_checked = set()
-            for rootname in possible_file_names:
-                clean_rootname = clean_filename(rootname).lower()
-                if clean_rootname not in already_checked:
-                    result += self.games.get((platform_name, clean_rootname, resource_type), [])
-                    already_checked.add(clean_rootname)
-            result.sort(key=get_resource_order)
-            return result
+            return [{'platform': game.platform.name, 'game': game.name, 'resource_type': resource_type},
+                    {'platform': game.platform.name, 'game': game.rom.rootname, 'resource_type': resource_type}]
         elif platform:
-            return self.platforms.get((platform.name, resource_type), [])
+            return [{'platform': platform.name, 'resource_type': resource_type}]
         elif category:
-            return self.categories.get((category.name, resource_type), [])
+            return [{'category': category.name, 'resource_type': resource_type}]
 
-    def search_manuals(self, game):
-        result = []
-        possible_file_names = [game.name, game.rom.rootname]
-        platform_name = game.platform.name
-        already_checked = set()
-        for rootname in possible_file_names:
-            clean_rootname = clean_filename(rootname).lower()
-            if clean_rootname not in already_checked:
-                result += self.manuals.get((platform_name, clean_rootname), [])
-                already_checked.add(clean_rootname)
-        result.sort(key=get_resource_order)
-        return result
+    def search_resources(self, resource_type, **kwargs):
+        possible_keys = self.get_keys(resource_type, **kwargs)
+        result = self.search(keys)
 
-    def search_trailers(self, game):
+    def search_images(self, resource_type, **kwargs):
+        return self.search_resources(resource_type, **kwargs)
+
+    def search_manuals(self, **kwargs):
+        return self.search_resources('Manual', **kwargs)
+
+    def search_trailers(self, **kwargs):
+        return self.search_resources('Trailer', **kwargs)
+
+    def keys_to_tuple(self, **kwargs):
+        tuple_as_dict = {}
+        for key, value in kwargs.items():
+            try:
+                index = self.fields.index(key)
+            except ValueError:
+                self.fields.append(key)
+                index = len(self.fields) - 1
+            tuple_as_dict[index] = clean_filename(value).lower()
+        return tuple(tuple_as_dict.get(i, '') for i in range(max(tuple_as_dict.keys())+1))
+
+    def add_resource(self, f, **keys):
+        keys = self.keys_to_tuple(keys)
+        self.resources[keys].append(f)
+
+    def search(self, possible_keys):
         result = []
-        possible_file_names = [game.name, game.rom.rootname]
-        platform_name = game.platform.name
         already_checked = set()
-        for rootname in possible_file_names:
-            clean_rootname = clean_filename(rootname).lower()
-            if clean_rootname not in already_checked:
-                result += self.trailers.get((platform_name, clean_rootname), [])
-                already_checked.add(clean_rootname)
+        for keys in possible_keys:
+            keys = self.keys_to_tuple(keys)
+            if keys not in already_checked:
+                already_checked.add(keys)
+                result += self.resources.get(keys, [])
         result.sort(key=get_resource_order)
         return result
