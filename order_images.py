@@ -331,6 +331,8 @@ class TestFrame(wx.Frame):
         file_menu.AppendSeparator()
         export_item = file_menu.Append(-1, "&Export CSV found resources\tCtrl-S",
                 "Export a list of games and the resources found for them")
+        export_orphan_item = file_menu.Append(-1, "&Export CSV orphan resources",
+                "Export a list of images for which we find no associated game")
         file_menu.AppendSeparator()
         exit_item = file_menu.Append(wx.ID_EXIT)
 
@@ -348,6 +350,7 @@ class TestFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.move_right_current_file, move_right_item)
         self.Bind(wx.EVT_MENU, self.delete_current_file, delete_item)
         self.Bind(wx.EVT_MENU, self.OnSaveAs, export_item)
+        self.Bind(wx.EVT_MENU, self.OnSaveOrphan, export_orphan_item)
         self.Bind(wx.EVT_MENU, self.onExit, exit_item)
 
     def change_preview_image(self, path):
@@ -397,6 +400,19 @@ class TestFrame(wx.Frame):
             except IOError:
                 wx.LogError("Cannot save current data in file '%s'." % pathname)
 
+    def OnSaveOrphan(self, event):
+        with wx.FileDialog(self, "Save CSV file", wildcard="CSV files (*.csv)|*.csv",
+                           style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as fileDialog:
+            if fileDialog.ShowModal() == wx.ID_CANCEL:
+                return     # the user changed their mind
+            # save the current contents in the file
+            pathname = fileDialog.GetPath()
+            try:
+                with open(pathname, 'w') as file:
+                    self.PrintCSVMissingResources(file)
+            except IOError:
+                wx.LogError("Cannot save current data in file '%s'." % pathname)
+
     def PrintCSVLine(self, line, f):
         for field in line:
             # field = field.encode('utf-8')
@@ -418,6 +434,17 @@ class TestFrame(wx.Frame):
             line.append(str(len(game.search_manuals())))
             line.append(str(len(game.search_trailers())))
             self.PrintCSVLine(line, f)
+
+    def PrintCSVMissingResources(self, fcsv):
+        resource_files = [f.absolute for resource in launchbox.resources.games.values() for f in resource]
+        image_types = list(set(image_type for _, _, image_type in launchbox.resources.games.keys()))
+        game_resources = []
+        for game in launchbox.games:
+            for folder in image_types:
+                game_resources += [r.absolute for r in game.search_images(folder)]
+        orphan_resources = [f for f in resource_files if f not in game_resources]
+        for line in orphan_resources:
+            self.PrintCSVLine([line], fcsv)
 
     def onChoice(self, event):
         self.chosen_platform = self._combo_platforms.GetString(self._combo_platforms.GetSelection())
