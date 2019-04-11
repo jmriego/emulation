@@ -34,7 +34,6 @@ class ResourcesCatalog:
     def __init__(self, images_dir, manuals_dir, trailers_dir):
         self.resources = {}
         self.fields = []
-        return
 
         # loop folders with images, manuals and trailers
         # saving files in the self.resources dict using the namedtuples as keys
@@ -82,11 +81,10 @@ class ResourcesCatalog:
         already_checked = set()
         possible_keys = self.get_keys(resource_type, **kwargs)
         for keys in possible_keys:
-            if keys not in already_checked:
-                already_checked.add(keys)
-                result += self.resources.get(
-                        (clean_filename(x).lower() for x in keys),
-                        [])
+            clean_keys = tuple(clean_filename(x).lower() for x in keys)
+            if clean_keys not in already_checked:
+                already_checked.add(clean_keys)
+                result += self.resources.get(clean_keys, [])
         result.sort(key=get_resource_order)
         return result
 
@@ -99,5 +97,5 @@ class ResourcesCatalog:
     def search_trailers(self, **kwargs):
         return self.search_resources(TRAILER_RESOURCE_TYPE, **kwargs)
 
-    def add_resource(self, f, **keys):
-        self.resources[(clean_filename(x).lower() for x in keys)].append(f)
+    def add_resource(self, f, keys):
+        self.resources.setdefault(tuple(clean_filename(x).lower() for x in keys), []).append(f)
