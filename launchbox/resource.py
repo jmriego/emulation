@@ -20,9 +20,12 @@ def get_resource_order(f):
     return (order, f.rootname)
 
 
+# these namedtuples will be used as the keys for the dict in ResourcesCatalog.resources
 PlatformCategorySearch = namedtuple('PlatformSearch', 'category resource_type')
 PlatformSearch = namedtuple('PlatformSearch', 'platform resource_type')
+# game also includes the platform as there may be games with the same name in different platforms
 GameSearch = namedtuple('PlatformSearch', 'platform game resource_type')
+# for manuals and trailers we specify the resource type instead of getting it from the folder name
 MANUAL_RESOURCE_TYPE = 'Manual'
 TRAILER_RESOURCE_TYPE = 'Trailer'
 
@@ -33,7 +36,11 @@ class ResourcesCatalog:
         self.fields = []
         return
 
-        # save images
+        # loop folders with images, manuals and trailers
+        # saving files in the self.resources dict using the namedtuples as keys
+        # the files use a naming convention so we can later query them using
+        # platform names, game names, etc.
+
         for f in find_files(images_dir, '*.*', as_file=True):
             if f.split_path[0] == 'Platform Categories' and len(f.split_path) >= 4:
                 self.add_resource(
@@ -48,20 +55,21 @@ class ResourcesCatalog:
                         f,
                         GameSearch(f.split_path[0], f.rootname_nosuffix, f.split_path[1]))
 
-        # save manuals
         for f in find_files(manuals_dir, '*.*', as_file=True):
             if len(f.split_path) >= 2:
                 self.add_resource(f,
                         GameSearch(f.split_path[0], f.rootname_nosuffix, MANUAL_RESOURCE_TYPE))
 
-        # save trailers
         for f in find_files(trailers_dir, '*.*', as_file=True):
             if len(f.split_path) >= 2:
                 self.add_resource(f,
                         GameSearch(f.split_path[0], f.rootname_nosuffix, TRAILER_RESOURCE_TYPE))
 
+    # this method will generate based on the passed gaame, platform or category,
+    # the namedtuple(s) that could have been used when adding that file in __init__
     def get_keys(self, resource_type, platform=None, category=None, game=None):
         if game:
+            # the resources for games can be named either with the game name or the rom file
             return [GameSearch(game.platform.name, game.name, resource_type),
                     GameSearch(game.platform.name, game.rom.rootname, resource_type)]
         elif platform:
