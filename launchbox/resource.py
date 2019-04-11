@@ -1,6 +1,6 @@
 import unicodedata
 from files.file import find_files
-from collections import defaultdict, namedtuple
+from collections import namedtuple
 from . import BAD_CHARS_IN_FILENAME
 
 
@@ -32,7 +32,7 @@ TRAILER_RESOURCE_TYPE = 'Trailer'
 
 class ResourcesCatalog:
     def __init__(self, images_dir, manuals_dir, trailers_dir):
-        self.resources = defaultdict(list)
+        self.resources = {}
         self.fields = []
         return
 
@@ -84,7 +84,9 @@ class ResourcesCatalog:
         for keys in possible_keys:
             if keys not in already_checked:
                 already_checked.add(keys)
-                result += self.resources.get(keys, [])
+                result += self.resources.get(
+                        (clean_filename(x).lower() for x in keys),
+                        [])
         result.sort(key=get_resource_order)
         return result
 
@@ -98,4 +100,4 @@ class ResourcesCatalog:
         return self.search_resources(TRAILER_RESOURCE_TYPE, **kwargs)
 
     def add_resource(self, f, **keys):
-        self.resources[keys].append(f)
+        self.resources[(clean_filename(x).lower() for x in keys)].append(f)
