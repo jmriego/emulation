@@ -60,7 +60,7 @@ class ResourcesCatalog:
             elif len(f.split_path) >= 3:
                 platform_name = f.split_path[0]
                 image_type = f.split_path[1]
-                game = f.rootname_nosuffix.lower()
+                game = clean_filename(f.rootname_nosuffix).lower()
                 insert_ordered(self.games[platform_name, game, image_type], f)
 
         # generate manuals
@@ -69,7 +69,7 @@ class ResourcesCatalog:
         for f in manual_files:
             if len(f.split_path) >= 2:
                 platform_name = f.split_path[0]
-                game = f.rootname_nosuffix.lower()
+                game = clean_filename(f.rootname_nosuffix).lower()
                 insert_ordered(self.manuals[platform_name, game], f)
 
         # generate trailers
@@ -78,7 +78,7 @@ class ResourcesCatalog:
         for f in trailer_files:
             if len(f.split_path) >= 2:
                 platform_name = f.split_path[0]
-                game = f.rootname_nosuffix.lower()
+                game = clean_filename(f.rootname_nosuffix).lower()
                 insert_ordered(self.trailers[platform_name, game], f)
 
     def search_images(self, resource_type, platform=None, category=None, game=None, as_file=False):
