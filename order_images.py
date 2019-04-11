@@ -436,14 +436,19 @@ class TestFrame(wx.Frame):
             self.PrintCSVLine(line, f)
 
     def PrintCSVMissingResources(self, fcsv):
-        resource_files = [f.absolute for resource in launchbox.resources.games.values() for f in resource]
-        image_types = list(set(image_type for _, _, image_type in launchbox.resources.games.keys()))
-        game_resources = []
-        for game in launchbox.games:
-            for folder in image_types:
-                game_resources += [r.absolute for r in game.search_images(folder)]
-        orphan_resources = [f for f in resource_files if f not in game_resources]
+        resource_files = [f.absolute for resource in launchbox.resources.resources.values() for f in resource]
+        image_types = list(set(key[-1] for key in launchbox.resources.resources.keys()))
+        used_resources = []
+        for folder in image_types:
+            for game in launchbox.games:
+                used_resources += [r.absolute for r in game.search_images(folder)]
+            for platform in launchbox.platforms:
+                used_resources += [r.absolute for r in platform.search_images(folder)]
+            for category in launchbox.categories:
+                used_resources += [r.absolute for r in category.search_images(folder)]
+        orphan_resources = [f for f in resource_files if f not in used_resources]
         for line in orphan_resources:
+            print(line)
             self.PrintCSVLine([line], fcsv)
 
     def onChoice(self, event):
