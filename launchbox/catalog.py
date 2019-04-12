@@ -3,6 +3,7 @@ from launchbox.emulator import EmulatorCatalog
 from launchbox.category import CategoriesCatalog
 from launchbox.platform import PlatformsCatalog
 from launchbox.game import GamesCatalog
+from launchbox.playlist import PlaylistsCatalog
 from launchbox.resource import ResourcesCatalog
 
 
@@ -14,10 +15,12 @@ class LaunchBox:
         self.images_dir = File([self.base_dir, "Images"]).absolute
         self.manuals_dir = File([self.base_dir, "Manuals"]).absolute
         self.trailers_dir = File([self.base_dir, "Videos"]).absolute
+        self.playlists_dir = File([self.data_dir, "Playlists"]).absolute
         self._emulators = None
         self._categories = None
         self._platforms = None
         self._games = None
+        self._playlists = None
         self._resources = None
 
     @property
@@ -60,6 +63,14 @@ class LaunchBox:
                     self.base_dir,
                     self.resources)
         return self._games
+
+    @property
+    def playlists(self):
+        if self._playlists is None:
+            self._playlists = PlaylistsCatalog(
+                    self.playlists_dir,
+                    self.games)
+        return self._playlists
 
     @property
     def resources(self):
