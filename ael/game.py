@@ -47,8 +47,8 @@ class Game(OrderedDict):
         self['s_manual'] = get_first_path(lb_game.search_manuals())
         self['s_trailer'] = get_first_path(lb_game.search_trailers())
 
-        if '://' in self['filename']:
-            uri = self['filename']
+        if '://' in lb_game.rom.path:
+            uri = lb_game.rom.path
             self['altapp'] = get_associated_app(uri)
             self['altarg'] = uri
             self['filename'] = '.'
