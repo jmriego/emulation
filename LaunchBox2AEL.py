@@ -2,7 +2,6 @@ import os
 from files.file import File
 from launchbox.catalog import LaunchBox
 from ael.launcher import LaunchersCatalog as AELLaunchersCatalog
-from ael.game import Game as AELGame
 from ael.category import Category as AELCategory
 from lxml import etree as ET
 import json
@@ -21,28 +20,16 @@ os.chdir(LBDIR)
 launchbox = LaunchBox(LBDIR)
 
 
-# Functions used
-def generate_games(launcher):
-    # loop in the games xml
-    result = {}
-    for game in launcher.games:
-        result[game.id] = dict(AELGame(game, DOSBOX_EXE, DOSBOX_ARGS))
-    return result
-
-
 # Main code
 def generate_data():
     categories = launchbox.categories
     # the concept of launcher is the different emulators or direct executables under a platform in AEL
     # is not the same as in launchbox se we need to generate this
-    launchers = AELLaunchersCatalog(launchbox.games)
-    games = {}
-    for launcher in launchers:
-        games[launcher.id] = generate_games(launcher)
-    return categories, launchers, games
+    launchers = AELLaunchersCatalog(launchbox.games, DOSBOX_EXE, DOSBOX_ARGS)
+    return categories, launchers
 
 
-def write_files(categories, launchers, games):
+def write_files(categories, launchers):
     ###############################################
     # generate AEL categories
     ###############################################
@@ -70,6 +57,8 @@ def write_files(categories, launchers, games):
 
     single_launcher_xml_keys = ['id', 'm_name', 'categoryID', 'platform', 'rompath', 'romext']
     for launcher_ael in launchers:
+        if not launcher_ael.games:
+            continue
         root = ET.Element("advanced_emulator_launcher_ROMs", version="1")
         launcher_xml = ET.SubElement(root, "launcher")
         for key, value in launcher_ael.items():
@@ -84,7 +73,9 @@ def write_files(categories, launchers, games):
     ###############################################
 
     for launcher_ael in launchers:
-        games_data = games[launcher_ael.id]
+        if not launcher_ael.games:
+            continue
+        games_data = {g['id']: dict(g) for g in launcher_ael.games}
         f_rom_base_noext = os.path.join(AELDIR, 'db_ROMs', '{}.json'.format(launcher_ael['roms_base_noext']))
         f = open(f_rom_base_noext, 'w')
         json.dump(games_data, f, indent=2)
@@ -92,5 +83,5 @@ def write_files(categories, launchers, games):
 
 
 if __name__ == "__main__":
-    categories, launchers, games = generate_data()
-    write_files(categories, launchers, games)
+    categories, launchers = generate_data()
+    write_files(categories, launchers)

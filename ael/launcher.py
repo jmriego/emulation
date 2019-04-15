@@ -4,6 +4,7 @@ import os
 from launchbox.resource import clean_filename
 from . import get_first_path
 import time
+from ael.game import Game
 
 
 # launcher is the combination of platform and either an emulator id or executables
@@ -68,8 +69,8 @@ class Launcher(OrderedDict):
                 ('path_trailer', "E:\\Juegos\\Emulation\\AEL\\{}\\trailers".format(lb_platform.name))
             ))
 
-    def add_game(self, game):
-        self.games.append(game)
+    def add_game(self, game, dosbox_exe=None, dosbox_args=None):
+        self.games.append(Game(game, dosbox_exe, dosbox_args))
         self['m_name'] = self.name if len(self.games) > 1 else self.platform.name
         self['num_roms'] = str(len(self.games))
         self['rompath'] = os.path.commonprefix(list(self.paths))
@@ -93,14 +94,14 @@ class Launcher(OrderedDict):
 
 
 class LaunchersCatalog:
-    def __init__(self, games):
+    def __init__(self, games, dosbox_exe=None, dosbox_args=None):
         self.launchers = {}
         for game in games:
             launcher = Launcher(game.platform, game.emulator)
             try:
-                self.launchers[launcher.id].add_game(game)
+                self.launchers[launcher.id].add_game(game, dosbox_exe, dosbox_args)
             except KeyError:
-                launcher.add_game(game)
+                launcher.add_game(game, dosbox_exe, dosbox_args)
                 self.launchers[launcher.id] = launcher
 
     def __iter__(self):

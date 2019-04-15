@@ -36,6 +36,7 @@ class Game(OrderedDict):
             ('s_map', ''),
             ('pclone_status', '')
             ))
+        self.rom = lb_game.rom
 
         for field, resource_types in GAME_RESOURCE_TYPES.items():
             found_imgs = []
@@ -47,8 +48,8 @@ class Game(OrderedDict):
         self['s_manual'] = get_first_path(lb_game.search_manuals())
         self['s_trailer'] = get_first_path(lb_game.search_trailers())
 
-        if '://' in lb_game.rom.path:
-            uri = lb_game.rom.path
+        if '://' in self.rom.path:
+            uri = self.rom.path
             self['altapp'] = get_associated_app(uri)
             self['altarg'] = uri
             self['filename'] = '.'
