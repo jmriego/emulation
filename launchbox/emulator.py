@@ -6,14 +6,24 @@ class Emulator:
         self.path = path if path else get_attribute_cdata(emulator_xml_node, 'ApplicationPath')
         self.id = id if id else get_attribute_cdata(emulator_xml_node, 'ID')
         self.name = name if name else get_attribute_cdata(emulator_xml_node, 'Title')
+        self.space = get_attribute_cdata(emulator_xml_node, 'NoSpace') != "true"
+        self.quotes = get_attribute_cdata(emulator_xml_node, 'NoQuotes') != "true"
+        self.args = {}
         command_line = get_attribute_cdata(emulator_xml_node, 'CommandLine')
-        space = get_attribute_cdata(emulator_xml_node, 'NoSpace') != "true"
-        quotes = get_attribute_cdata(emulator_xml_node, 'NoQuotes') != "true"
-        self.args = (
+        self.add_platform_parameters(platform='default', command_line=command_line)
+
+    def add_platform_parameters(self, emulatorplatform_xml_node=None, platform=None, command_line=None):
+        if emulatorplatform_xml_node:
+            platform = get_attribute_cdata(emulatorplatform_xml_node, 'Platform')
+            command_line = get_attribute_cdata(emulatorplatform_xml_node, 'CommandLine')
+        self.args[platform] = (
                 command_line
-                + (' ' if space else '')
-                + ('"{}"' if quotes else '{}')
+                + (' ' if self.space else '')
+                + ('"{}"' if self.quotes else '{}')
                 ).lstrip()
+
+    def command_line(self, platform):
+        return self.args.get(platform, self.args['default'])
 
 
 class EmulatorCatalog:
@@ -25,6 +35,10 @@ class EmulatorCatalog:
             emulators[emulator.id] = emulator
 
         emulators['Executables'] = Emulator(None, 'Executables', r'C:\Emulators\default_launcher.bat', 'Executables')
+
+        for emulatorplatform_xml_node in getattr(emulator_xml.LaunchBox, 'EmulatorPlatform', []):
+            emulator_id = get_attribute_cdata(emulatorplatform_xml_node, 'Emulator')
+            emulators[emulator_id].add_platform_parameters(emulatorplatform_xml_node)
         self.emulators = emulators
 
     def __getitem__(self, key):

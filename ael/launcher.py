@@ -28,7 +28,7 @@ class Launcher(OrderedDict):
                 ('m_plot', lb_platform.notes),
                 ('m_rating', ""),
                 ('application', emulator.path),
-                ('args', emulator.args.format('$rom$')),
+                ('args', emulator.command_line(lb_platform.name).format('$rom$')),
                 ('finished', "False"),
                 ('minimize', "False"),
                 ('roms_base_noext', clean_filename("LB2AEL_{}_roms".format(self.name.replace(' ', '_')))),
