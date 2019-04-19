@@ -71,7 +71,6 @@ class Launcher(OrderedDict):
 
     def add_game(self, game, dosbox_exe=None, dosbox_args=None):
         self.games.append(Game(game, dosbox_exe, dosbox_args))
-        self['m_name'] = self.name if len(self.games) > 1 else self.platform.name
         self['num_roms'] = str(len(self.games))
         self['rompath'] = os.path.commonprefix(list(self.paths))
         self['romext'] = ','.join(self.extensions)
@@ -103,6 +102,16 @@ class LaunchersCatalog:
             except KeyError:
                 launcher.add_game(game, dosbox_exe, dosbox_args)
                 self.launchers[launcher.id] = launcher
+
+        platform_launcher_count = {}
+        for launcher in self.launchers.values():
+            platform_launcher_count.setdefault(launcher.platform.name, list()).append(launcher)
+
+        for platform, launchers in platform_launcher_count.items():
+            if len(launchers) > 1:
+                for launcher in launchers:
+                    launcher['m_name'] = launcher.name
+
 
     def __iter__(self):
         return iter(self.launchers.values())
