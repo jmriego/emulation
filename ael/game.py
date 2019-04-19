@@ -9,10 +9,12 @@ def get_associated_app(uri):
     key = r'{}\Shell\Open\Command'.format(prefix)
     try:
         command = winreg.QueryValue(winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, key), None)
-        app, params = shlex.split(command)
+        app, *params = shlex.split(command)
+        params = ' '.join(params)
     except OSError:
         app = None
-    return app
+        params = None
+    return app, params
 
 
 # launcher is the combination of platform and either an emulator id or executables
@@ -50,9 +52,11 @@ class Game(OrderedDict):
 
         if '://' in self.rom.path:
             uri = self.rom.path
-            self['altapp'] = get_associated_app(uri)
-            self['altarg'] = uri
-            self['filename'] = '.'
+            app, params = get_associated_app(uri)
+            if app and params:
+                self['altapp'] = app
+                self['altarg'] = params.replace('%1', uri)
+                self['filename'] = '.'
         elif lb_game.dosbox_conf:
             self['altapp'] = dosbox_exe
             self['altarg'] = dosbox_args.format(lb_game.dosbox_conf)
