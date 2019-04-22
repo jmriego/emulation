@@ -27,7 +27,7 @@ class Launcher(OrderedDict):
                 ('m_studio', lb_platform.developer),
                 ('m_plot', lb_platform.notes),
                 ('m_rating', ""),
-                ('application', emulator.path),
+                ('application', emulator.path.absolute),
                 ('args', emulator.command_line(lb_platform.name).format('$rom$')),
                 ('finished', "False"),
                 ('minimize', "False"),

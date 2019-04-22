@@ -27,7 +27,8 @@ class LaunchBox:
     def emulators(self):
         if self._emulators is None:
             self._emulators = EmulatorCatalog(
-                    File([self.data_dir, "Emulators.xml"]).absolute)
+                    File([self.data_dir, "Emulators.xml"]).absolute,
+                    self.base_dir)
         return self._emulators
 
     @property
