@@ -18,14 +18,14 @@ class Emulator:
         if emulatorplatform_xml_node:
             platform = get_attribute_cdata(emulatorplatform_xml_node, 'Platform')
             command_line = get_attribute_cdata(emulatorplatform_xml_node, 'CommandLine')
-        self.args[platform] = (
+        self.args[platform.lower()] = (
                 command_line
                 + (' ' if self.space else '')
                 + ('"{}"' if self.quotes else '{}')
                 ).lstrip()
 
     def command_line(self, platform):
-        return self.args.get(platform, self.args['default'])
+        return self.args.get(platform.lower(), self.args['default'])
 
 
 class EmulatorCatalog:
