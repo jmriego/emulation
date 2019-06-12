@@ -15,6 +15,7 @@ file_properties = {}
 possible_platforms = set()
 possible_resource_types = set()
 possible_platforms.add('(Any)')
+possible_platforms.add('(Recent)')
 possible_resource_types.add('(Any)')
 
 for folder in [folder for res_type in GAME_RESOURCE_TYPES.values() for folder in res_type]:
@@ -89,11 +90,17 @@ def reprioritize_resource(resource, move=-1, delete=False):
 ##
 def get_list_to_check(chosen_platform, chosen_resource_type):
     result = {}
-    if chosen_platform == '(Any)' or chosen_resource_type == '(Any)':
+    if chosen_platform == '(Recent)':
+        recent_date_limit = min(sorted(g.date_modified for g in launchbox.games)[-26:])
+        recent_games = [g.name for g in launchbox.games if g.date_modified >= recent_date_limit]
+
+    if chosen_platform in ['(Any)', '(Recent)'] or chosen_resource_type == '(Any)':
         for platform_name, resource_type in duplicate_resources.keys():
-            if chosen_platform in [platform_name, '(Any)'] and chosen_resource_type in [resource_type, '(Any)']:
+            if chosen_platform in [platform_name, '(Any)', '(Recent)'] and chosen_resource_type in [resource_type, '(Any)']:
                 try:
                     for game, resources in duplicate_resources[(platform_name, resource_type)].items():
+                        if chosen_platform == '(Recent)' and game not in recent_games:
+                            continue
                         result[(platform_name, resource_type, game)] = resources
                 except:
                     pass

@@ -12,6 +12,8 @@ class Game:
         self.publisher = get_attribute_cdata(game_xml_node, 'Publisher')
         self.release_date = get_attribute_cdata(game_xml_node, 'ReleaseDate')
         self.release_year = get_attribute_cdata(game_xml_node, 'ReleaseDate')[:4]
+        self.date_added = get_attribute_cdata(game_xml_node, 'DateAdded')
+        self.date_modified = get_attribute_cdata(game_xml_node, 'DateModified')
         self.developer = get_attribute_cdata(game_xml_node, 'Developer')
         self.genre = get_attribute_cdata(game_xml_node, 'Genre')
         self.completed = get_attribute_cdata(game_xml_node, 'Completed')
