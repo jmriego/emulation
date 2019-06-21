@@ -18,6 +18,10 @@ class Emulator:
         if emulatorplatform_xml_node:
             platform = get_attribute_cdata(emulatorplatform_xml_node, 'Platform')
             command_line = get_attribute_cdata(emulatorplatform_xml_node, 'CommandLine')
+            # if we are not overwriting the default command line, skip it
+            if command_line == '':
+                return
+
         self.args[platform.lower()] = (
                 command_line
                 + (' ' if self.space else '')
