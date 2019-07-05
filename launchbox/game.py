@@ -31,7 +31,7 @@ class Game:
         if use_emulator and emulator_id == self.emulator.id:
             application_path = get_attribute_cdata(additional_xml_node, 'ApplicationPath')
             self.disks.append(File(application_path, self.rom.basedir))
-        
+
     def search_images(self, image_type):
         return self.resources_catalog.search_images(image_type, game=self)
 
@@ -46,6 +46,7 @@ class GamesCatalog:
     def __init__(self, platforms_xml_dir, platforms, emulators, lbdir, resources_catalog):
         games = {}
         for platform in platforms:
+            print('Generating list of {} games '.format(platform.name))
             games_xml = untangle.parse(File([platforms_xml_dir, '{}.xml'.format(platform.name)]).absolute)
             for game_xml_node in games_xml.LaunchBox.Game:
                 game = Game(game_xml_node, platform, lbdir, resources_catalog)
