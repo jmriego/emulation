@@ -91,7 +91,7 @@ def reprioritize_resource(resource, move=-1, delete=False):
 def get_list_to_check(chosen_platform, chosen_resource_type):
     result = {}
     if chosen_platform == '(Recent)':
-        recent_date_limit = min(sorted(g.date_modified for g in launchbox.games)[-26:])
+        recent_date_limit = min(sorted(g.date_modified for g in launchbox.games)[-51:])
         recent_games = [g.name for g in launchbox.games if g.date_modified >= recent_date_limit]
 
     if chosen_platform in ['(Any)', '(Recent)'] or chosen_resource_type == '(Any)':

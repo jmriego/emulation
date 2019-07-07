@@ -81,6 +81,43 @@ def write_files(categories, launchers):
         json.dump(games_data, f, indent=2)
         f.close()
 
+    ###############################################
+    # generate recent games JSON file
+    ###############################################
+
+    all_games_data = {}
+    for launcher_ael in launchers:
+        for ael_game in launcher_ael.games:
+            all_games_data[ael_game['id']] = {**dict(launcher_ael), **dict(ael_game)}
+
+    def update_game(game):
+        for key in game.keys():
+            try:
+                new_value = all_games_data[game['id']][key]
+                if str(type(game[key])) == str(type(new_value)):
+                    game[key] = new_value
+                else:
+                    if type(game[key]) is bool:
+                        game[key] = new_value.lower() == 'true' 
+            except KeyError:
+                pass
+        return game
+
+    f_recent_games = os.path.join(AELDIR, 'history.json')
+    with open(f_recent_games) as f:
+        recents_data = json.load(f)
+    recents_data[1] = [update_game(g) for g in recents_data[1]]
+    f = open(f_recent_games, 'w', encoding='utf-8')
+    json.dump(recents_data, f, indent=1, ensure_ascii=False)
+    f.close()
+
+    f_most_played_games = os.path.join(AELDIR, 'most_played.json')
+    with open(f_most_played_games) as f:
+        most_playeds_data = json.load(f)
+    most_playeds_data[1] = {g_id: update_game(g) for g_id, g in most_playeds_data[1].items()}
+    f = open(f_most_played_games, 'w', encoding='utf-8')
+    json.dump(most_playeds_data, f, indent=1, ensure_ascii=False)
+    f.close()
 
 if __name__ == "__main__":
     categories, launchers = generate_data()

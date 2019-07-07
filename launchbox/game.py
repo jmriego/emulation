@@ -9,6 +9,8 @@ class Game:
         self.rom = File(get_attribute_cdata(game_xml_node, 'ApplicationPath'), lbdir)
         self.emulator = get_attribute_cdata(game_xml_node, 'Emulator', 'Executables')
         self.notes = get_attribute_cdata(game_xml_node, 'Notes')
+        self.star_rating = get_attribute_cdata(game_xml_node, 'StarRating')
+        self.community_star_rating = get_attribute_cdata(game_xml_node, 'CommunityStarRating')
         self.publisher = get_attribute_cdata(game_xml_node, 'Publisher')
         self.release_date = get_attribute_cdata(game_xml_node, 'ReleaseDate')
         self.release_year = get_attribute_cdata(game_xml_node, 'ReleaseDate')[:4]
@@ -16,6 +18,7 @@ class Game:
         self.date_modified = get_attribute_cdata(game_xml_node, 'DateModified')
         self.developer = get_attribute_cdata(game_xml_node, 'Developer')
         self.genre = get_attribute_cdata(game_xml_node, 'Genre')
+        self.play_mode = get_attribute_cdata(game_xml_node, 'PlayMode')
         self.completed = get_attribute_cdata(game_xml_node, 'Completed')
         if get_attribute_cdata(game_xml_node, 'UseDosBox').lower() == 'true':
             self.dosbox_conf = get_attribute_cdata(game_xml_node, 'DosBoxConfigurationPath')

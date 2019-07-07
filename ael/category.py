@@ -16,7 +16,10 @@ class Category(OrderedDict):
             ('default_banner', "s_banner"),
             ('default_poster', "s_poster"),
             # get the first file found or None
-            ('s_icon', get_first_path(lb_category.search_images('Clear Logo'))),
+            ('s_icon', (
+                get_first_path(lb_category.search_images('Device'))
+                or get_first_path(lb_category.search_images('Clear Logo'))
+                )),
             ('s_fanart', get_first_path(lb_category.search_images('Fanart'))),
             ('s_banner', get_first_path(lb_category.search_images('Banner'))),
             ('s_poster', ""),
