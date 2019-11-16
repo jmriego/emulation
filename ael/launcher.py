@@ -55,6 +55,7 @@ class Launcher(OrderedDict):
                 ('s_poster', ""),
                 ('s_clearlogo', get_first_path(lb_platform.search_images('Clear Logo'))),
                 ('s_trailer', ""),  # TODO this and lower down
+                ('path_3dbox', "E:\\Juegos\\Emulation\\AEL\\{}\\3dbox".format(lb_platform.name)),
                 ('path_banner', "E:\\Juegos\\Emulation\\AEL\\{}\\banner".format(lb_platform.name)),
                 ('path_clearlogo', "E:\\Juegos\\Emulation\\AEL\\{}\\clearlogo".format(lb_platform.name)),
                 ('path_fanart', "E:\\Juegos\\Emulation\\AEL\\{}\\fanart".format(lb_platform.name)),

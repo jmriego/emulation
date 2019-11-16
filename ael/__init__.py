@@ -4,6 +4,7 @@ GAME_RESOURCE_TYPES = {
   's_flyer': ['Advertisement Flyer - Front'],
   's_boxback': ['Box - Back'],
   's_boxfront': ['Box - Front', 'Box - Front - Reconstructed', 'Fanart - Box - Front'],
+  's_3dbox': ['Box - 3D'],
   's_cartridge': ['Cart - Front', 'Cart - 3D', 'Cart - Back'],
   's_clearlogo': ['Clear Logo'],
   's_fanart': ['Fanart - Background'],
