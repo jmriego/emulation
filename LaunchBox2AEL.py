@@ -25,7 +25,7 @@ def generate_data():
     categories = launchbox.categories
     # the concept of launcher is the different emulators or direct executables under a platform in AEL
     # is not the same as in launchbox se we need to generate this
-    launchers = AELLaunchersCatalog(launchbox.games, DOSBOX_EXE, DOSBOX_ARGS)
+    launchers = AELLaunchersCatalog(launchbox.games, DOSBOX_EXE, DOSBOX_ARGS, AELDIR)
     return categories, launchers
 
 

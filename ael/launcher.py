@@ -9,12 +9,13 @@ from ael.game import Game
 
 # launcher is the combination of platform and either an emulator id or executables
 class Launcher(OrderedDict):
-    def __init__(self, lb_platform, emulator):
+    def __init__(self, lb_platform, emulator, aeldir):
         self.name = '{} ({})'.format(lb_platform.name, emulator.name)
         self.id = md5(self.name.encode()).hexdigest()
         self.platform = lb_platform
         self.emulator = emulator
         self.games = []
+        assets_dir = "{}\\asset-launchers\\{}".format(aeldir, lb_platform.name)
         super(Launcher, self).__init__((
                 ('id', self.id),
                 ('m_name', lb_platform.name),
@@ -54,20 +55,20 @@ class Launcher(OrderedDict):
                 ('s_banner', get_first_path(lb_platform.search_images('Banner'))),
                 ('s_poster', ""),
                 ('s_clearlogo', get_first_path(lb_platform.search_images('Clear Logo'))),
-                ('s_trailer', ""),  # TODO this and lower down
-                ('path_3dbox', "E:\\Juegos\\Emulation\\AEL\\{}\\3dbox".format(lb_platform.name)),
-                ('path_banner', "E:\\Juegos\\Emulation\\AEL\\{}\\banner".format(lb_platform.name)),
-                ('path_clearlogo', "E:\\Juegos\\Emulation\\AEL\\{}\\clearlogo".format(lb_platform.name)),
-                ('path_fanart', "E:\\Juegos\\Emulation\\AEL\\{}\\fanart".format(lb_platform.name)),
-                ('path_title', "E:\\Juegos\\Emulation\\AEL\\{}\\titles".format(lb_platform.name)),
-                ('path_snap', "E:\\Juegos\\Emulation\\AEL\\{}\\snap".format(lb_platform.name)),
-                ('path_boxfront', "E:\\Juegos\\Emulation\\AEL\\{}\\boxfront".format(lb_platform.name)),
-                ('path_boxback', "E:\\Juegos\\Emulation\\AEL\\{}\\boxback".format(lb_platform.name)),
-                ('path_cartridge', "E:\\Juegos\\Emulation\\AEL\\{}\\cartridges".format(lb_platform.name)),
-                ('path_flyer', "E:\\Juegos\\Emulation\\AEL\\{}\\flyers".format(lb_platform.name)),
-                ('path_map', "E:\\Juegos\\Emulation\\AEL\\{}\\maps".format(lb_platform.name)),
-                ('path_manual', "E:\\Juegos\\Emulation\\AEL\\{}\\manuals".format(lb_platform.name)),
-                ('path_trailer', "E:\\Juegos\\Emulation\\AEL\\{}\\trailers".format(lb_platform.name))
+                ('s_trailer', "{}\\trailers".format(assets_dir)),
+                ('path_3dbox', "{}\\3dbox".format(assets_dir)),
+                ('path_banner', "{}\\banner".format(assets_dir)),
+                ('path_clearlogo', "{}\\clearlogo".format(assets_dir)),
+                ('path_fanart', "{}\\fanart".format(assets_dir)),
+                ('path_title', "{}\\titles".format(assets_dir)),
+                ('path_snap', "{}\\snap".format(assets_dir)),
+                ('path_boxfront', "{}\\boxfront".format(assets_dir)),
+                ('path_boxback', "{}\\boxback".format(assets_dir)),
+                ('path_cartridge', "{}\\cartridges".format(assets_dir)),
+                ('path_flyer', "{}\\flyers".format(assets_dir)),
+                ('path_map', "{}\\maps".format(assets_dir)),
+                ('path_manual', "{}\\manuals".format(assets_dir)),
+                ('path_trailer', "{}\\trailers".format(assets_dir))
             ))
 
     def add_game(self, game, dosbox_exe=None, dosbox_args=None):
@@ -94,10 +95,10 @@ class Launcher(OrderedDict):
 
 
 class LaunchersCatalog:
-    def __init__(self, games, dosbox_exe=None, dosbox_args=None):
+    def __init__(self, games, dosbox_exe=None, dosbox_args=None, aeldir=None):
         self.launchers = {}
         for game in games:
-            launcher = Launcher(game.platform, game.emulator)
+            launcher = Launcher(game.platform, game.emulator, aeldir)
             try:
                 self.launchers[launcher.id].add_game(game, dosbox_exe, dosbox_args)
             except KeyError:
