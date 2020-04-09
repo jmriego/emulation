@@ -11,6 +11,7 @@ class Game:
         self.notes = get_attribute_cdata(game_xml_node, 'Notes')
         self.star_rating = get_attribute_cdata(game_xml_node, 'StarRating')
         self.community_star_rating = get_attribute_cdata(game_xml_node, 'CommunityStarRating')
+        self.community_star_rating_votes = get_attribute_cdata(game_xml_node, 'CommunityStarRatingTotalVotes')
         self.publisher = get_attribute_cdata(game_xml_node, 'Publisher')
         self.release_date = get_attribute_cdata(game_xml_node, 'ReleaseDate')
         self.release_year = get_attribute_cdata(game_xml_node, 'ReleaseDate')[:4]

@@ -31,7 +31,7 @@ class Game(OrderedDict):
             ('m_name', lb_game.name),
             ('m_plot', lb_game.notes),
             # launchbox rating is 0-5 and Kodi expects 0-10
-            ('m_rating', round(float(lb_game.community_star_rating)*2.0)),
+            ('m_rating', str(round(float(lb_game.community_star_rating)*2.0)) if int(lb_game.community_star_rating_votes) else ""),
             ('m_esrb', ''),
             ('m_developer', lb_game.developer),
             ('m_year', lb_game.release_year),
