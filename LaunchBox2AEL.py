@@ -12,7 +12,12 @@ config = configparser.RawConfigParser()
 config.read(File([os.path.dirname(__file__), 'config.ini']).absolute)
 
 LBDIR = config.get('launchbox', 'dir')
+if not File([LBDIR, 'Launchbox.exe']).exists():
+    raise IOError('Incorrect LaunchBox configuration. Cannot find LaunchBox.exe on that folder')
+
 AELDIR = os.path.expandvars(config.get('ael', 'dir'))
+if not File([AELDIR, 'categories.xml']).exists():
+    raise IOError('Incorrect AEL configuration. Cannot find categories.xml on that folder')
 DOSBOX_EXE = config.get('dosbox', 'exe')
 DOSBOX_ARGS = config.get('dosbox', 'args')
 

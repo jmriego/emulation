@@ -72,6 +72,10 @@ class File:
     def __unicode__(self):
         return self.absolute
 
+    def exists(self):
+        path = ntpath if self.mode == 'win' else os.path
+        return path.exists(self.absolute)
+
     def delete(self):
         os.remove(self.absolute)
 
