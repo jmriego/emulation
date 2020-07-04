@@ -3,6 +3,7 @@ from files.file import File
 from launchbox.catalog import LaunchBox
 from ael.launcher import LaunchersCatalog as AELLaunchersCatalog
 from ael.category import Category as AELCategory
+from ael.collection import CollectionsCatalog as AELCollectionsCatalog
 from lxml import etree as ET
 import json
 import time
@@ -18,6 +19,7 @@ if not File([LBDIR, 'Launchbox.exe']).exists():
 AELDIR = os.path.expandvars(config.get('ael', 'dir'))
 if not File([AELDIR, 'categories.xml']).exists():
     raise IOError('Incorrect AEL configuration. Cannot find categories.xml on that folder')
+
 DOSBOX_EXE = config.get('dosbox', 'exe')
 DOSBOX_ARGS = config.get('dosbox', 'args')
 
@@ -31,10 +33,11 @@ def generate_data():
     # the concept of launcher is the different emulators or direct executables under a platform in AEL
     # is not the same as in launchbox se we need to generate this
     launchers = AELLaunchersCatalog(launchbox.games, DOSBOX_EXE, DOSBOX_ARGS, AELDIR)
-    return categories, launchers
+    collections = AELCollectionsCatalog(launchers, launchbox.playlists)
+    return categories, launchers, collections
 
 
-def write_files(categories, launchers):
+def write_files(categories, launchers, collections):
     ###############################################
     # generate AEL categories
     ###############################################
@@ -86,7 +89,43 @@ def write_files(categories, launchers):
         json.dump(games_data, f, indent=2)
         f.close()
 
+    ###############################################
+    # generate AEL collections
+    ###############################################
+
+    root = ET.Element("advanced_emulator_launcher_Collection_index", version="1")
+    control = ET.SubElement(root, "control")
+    ET.SubElement(control, "update_timestamp").text = str(time.time())
+
+    for collection in collections:
+        if not collection.games:
+            continue
+        collection_xml = ET.SubElement(root, "Collection")
+        for key, value in collection.items():
+            ET.SubElement(collection_xml, key).text = value
+
+    tree = ET.ElementTree(root)
+    tree.write(os.path.join(AELDIR, 'collections.xml'), pretty_print=True)
+
+    ###############################################
+    # generate games JSON files per launcher
+    ###############################################
+
+    for collection in collections:
+        if not collection.games:
+            continue
+        games_data = [dict(g) for g in collection.games]
+        collection_data = []
+        collection_data.append(
+            {"control":"Advanced Emulator Launcher Collection ROMs",
+             "version":1})
+        collection_data.append(games_data)
+
+        f_rom_base_noext = os.path.join(AELDIR, 'db_Collections', '{}.json'.format(collection['roms_base_noext']))
+        f = open(f_rom_base_noext, 'w')
+        json.dump(collection_data, f, indent=2)
+        f.close()
 
 if __name__ == "__main__":
-    categories, launchers = generate_data()
-    write_files(categories, launchers)
+    categories, launchers, collections = generate_data()
+    write_files(categories, launchers, collections)

@@ -72,10 +72,12 @@ class Launcher(OrderedDict):
             ))
 
     def add_game(self, game, dosbox_exe=None, dosbox_args=None):
-        self.games.append(Game(game, dosbox_exe, dosbox_args))
+        ael_game = Game(game, dosbox_exe, dosbox_args)
+        ael_game.launcher = self
+        self.games.append(ael_game)
         self['num_roms'] = str(len(self.games))
         self['rompath'] = os.path.commonprefix(list(self.paths))
-        self['romext'] = ','.join(self.extensions)
+        self['romext'] = '|'.join(self.extensions)
 
     @property
     def paths(self):

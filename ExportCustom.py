@@ -47,7 +47,7 @@ for g in epic_games:
     target_path = 'com.epicgames.launcher://apps/{}?action=launch&silent=true'.format(g['GameId'])
     if target_path in [g.rom.path for g in launchbox.games] or g['GameId'] in dlcs:
         continue
-    pathLink = os.path.join(os.path.dirname(__file__), g['Name'] + '.lnk')
+    pathLink = os.path.join(os.path.dirname(__file__), clean_filename(g['Name']) + '.lnk')
     shell = Dispatch('WScript.Shell')
     shortcut = shell.CreateShortCut(pathLink)
     shortcut.Targetpath = target_path
@@ -55,6 +55,6 @@ for g in epic_games:
     print('{}: {}'.format(g['Name'], target_path))
 
 # Write data to AEL
-categories, launchers = generate_data()
+categories, launchers, collections = generate_data()
 launchers.launchers[oculus_launcher.id] = oculus_launcher
-write_files(categories, launchers)
+write_files(categories, launchers, collections)
