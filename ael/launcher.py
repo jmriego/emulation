@@ -93,6 +93,8 @@ class Launcher(OrderedDict):
         for game in self.games:
             if '://' not in game.rom.path:
                 extensions.add(game.rom.extension)
+            else:
+                extensions.add("lnk")
         return extensions
 
 

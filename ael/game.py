@@ -56,7 +56,8 @@ class Game(OrderedDict):
             app, params = get_associated_app(uri)
             if app and params:
                 self['altapp'] = app
-                self['altarg'] = params.replace('%1', uri)
+                self['altarg'] = uri
+                self['romext'] = 'lnk'
                 self['filename'] = '.'
         elif lb_game.dosbox_conf:
             self['altapp'] = dosbox_exe
