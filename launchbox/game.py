@@ -54,8 +54,11 @@ class GamesCatalog:
             games_xml = untangle.parse(File([platforms_xml_dir, '{}.xml'.format(platform.name)]).absolute)
             for game_xml_node in games_xml.LaunchBox.Game:
                 game = Game(game_xml_node, platform, lbdir, resources_catalog)
-                game.emulator = emulators[game.emulator]
-                games[game.id] = game
+                try:
+                    game.emulator = emulators[game.emulator]
+                    games[game.id] = game
+                except KeyError:
+                    print('Game {} does not have a valid emulator configuration'.format(game.name))
             for additional_xml_node in getattr(games_xml.LaunchBox, 'AdditionalApplication', []):
                 game_id = get_attribute_cdata(additional_xml_node, 'GameID')
                 games[game_id].add_application(additional_xml_node)
