@@ -84,7 +84,10 @@ class Launcher(OrderedDict):
         paths = set()
         for game in self.games:
             if '://' not in game.rom.path:
-                paths.add(game.rom.absolute_dir)
+                try:
+                    paths.add(game.rom.absolute_dir)
+                except:
+                    pass
         return paths
 
     @property

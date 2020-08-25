@@ -67,9 +67,6 @@ class File:
         return fmt.format(self.path)
 
     def __str__(self):
-        return unicode(self.absolute).encode('utf-8')
-
-    def __unicode__(self):
         return self.absolute
 
     def exists(self):
