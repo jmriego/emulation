@@ -28,13 +28,20 @@ class Game:
         self.platform = platform
         self.resources_catalog = resources_catalog
         self.disks = []
+        self.additional_applications = {}
 
     def add_application(self, additional_xml_node):
         use_emulator = get_attribute_cdata(additional_xml_node, 'UseEmulator').lower() == "true"
         emulator_id = get_attribute_cdata(additional_xml_node, 'EmulatorId')
+        application_path = get_attribute_cdata(additional_xml_node, 'ApplicationPath')
         if use_emulator and emulator_id == self.emulator.id:
-            application_path = get_attribute_cdata(additional_xml_node, 'ApplicationPath')
             self.disks.append(File(application_path, self.rom.basedir))
+        else:
+            additional_application_id = get_attribute_cdata(additional_xml_node, 'Id')
+            self.additional_applications[additional_application_id] = {
+                'name': get_attribute_cdata(additional_xml_node, 'Name'),
+                'path': application_path,
+                'command_line': get_attribute_cdata(additional_xml_node, 'CommandLine')}
 
     def search_images(self, image_type):
         return self.resources_catalog.search_images(image_type, game=self)

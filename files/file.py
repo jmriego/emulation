@@ -69,6 +69,9 @@ class File:
     def __str__(self):
         return self.absolute
 
+    def __bool__(self):
+        return bool(self.path)
+
     def exists(self):
         path = ntpath if self.mode == 'win' else os.path
         return path.exists(self.absolute)

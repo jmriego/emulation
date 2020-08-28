@@ -63,6 +63,12 @@ class Game(OrderedDict):
             self['altapp'] = dosbox_exe
             self['altarg'] = dosbox_args.format(lb_game.dosbox_conf)
         elif lb_game.emulator.id == 'Executables':
-            self['altapp'] = self['filename']
-            self['altarg'] = ' '
+            if lb_game.additional_applications:
+                # TODO: check if there should be more than one additional application
+                for app_id, app in lb_game.additional_applications.items():
+                    self['altapp'] = app['path']
+                    self['altarg'] = app['command_line']
+            else:
+                self['altapp'] = self['filename']
+                self['altarg'] = ' '
         self['disks'] = [f.absolute for f in lb_game.disks]
