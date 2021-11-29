@@ -76,7 +76,11 @@ class Launcher(OrderedDict):
         ael_game.launcher = self
         self.games.append(ael_game)
         self['num_roms'] = str(len(self.games))
-        self['rompath'] = os.path.commonprefix(list(self.paths))
+        try:
+            self['rompath'] = os.path.commonprefix(list(self.paths)) or list(self.paths)[0]
+        except IndexError:
+            self['rompath'] = ''
+
         self['romext'] = '|'.join(self.extensions)
 
     @property
