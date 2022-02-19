@@ -1,3 +1,7 @@
+# Launchbox2AEL
+
+This is a program that takes your Launchbox library and exports it to Advanced Emulator Launcher so you can enjoy your library in Kodi.
+
 # How to use Launchbox2AEL
 
 - Install Python
