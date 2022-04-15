@@ -1,16 +1,23 @@
 from collections import OrderedDict
 from . import GAME_RESOURCE_TYPES, get_first_path
-import winreg
+import os
 import shlex
+import winreg
 
 
 def get_associated_app(uri):
     prefix, game = uri.split('://')
     key = r'{}\Shell\Open\Command'.format(prefix)
+
+    if prefix == "xbox":
+        explorer_exe = os.path.expandvars("%SystemRoot%\\System32\\cmd.exe")
+        game_param = '/c "start shell:appsFolder\\{}!Game"'.format(game)
+        return explorer_exe, game_param
+
     try:
         command = winreg.QueryValue(winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, key), None)
         app, *params = shlex.split(command)
-        params = ' '.join(params)
+        params = ' '.join(p.replace("%1", uri) for p in params)
     except OSError:
         app = None
         params = None
@@ -56,7 +63,7 @@ class Game(OrderedDict):
             app, params = get_associated_app(uri)
             if app and params:
                 self['altapp'] = app
-                self['altarg'] = uri
+                self['altarg'] = params
                 self['romext'] = 'lnk'
                 self['filename'] = '.'
         elif lb_game.dosbox_conf:
