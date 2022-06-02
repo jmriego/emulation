@@ -79,7 +79,10 @@ class Launcher(OrderedDict):
         try:
             self['rompath'] = os.path.commonprefix(list(self.paths)) or list(self.paths)[0]
         except IndexError:
-            self['rompath'] = ''
+            # if rompath is empty, AEL will try to just open the application
+            # we add the path to the app itself instead of its games
+            # (e.g. path to Steam) which won't be used anyway
+            self['rompath'] = ael_game['altapp']
 
         self['romext'] = '|'.join(self.extensions)
 
