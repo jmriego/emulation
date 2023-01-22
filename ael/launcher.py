@@ -84,7 +84,7 @@ class Launcher(OrderedDict):
             # (e.g. path to Steam) which won't be used anyway
             self['rompath'] = ael_game['altapp']
 
-        self['romext'] = '|'.join(self.extensions)
+        self['romext'] = '|'.join(sorted(list(self.extensions)))
 
     @property
     def paths(self):
@@ -101,7 +101,7 @@ class Launcher(OrderedDict):
     def extensions(self):
         extensions = set()
         for game in self.games:
-            if '://' not in game.rom.path:
+            if '://' not in game.rom.path and game.rom.extension:
                 extensions.add(game.rom.extension)
             else:
                 extensions.add("lnk")
