@@ -38,5 +38,5 @@ launchers.launchers[oculus_launcher.id] = oculus_launcher
 # Remove DLCs from the catalog
 for launcher in launchers:
     launcher.games = [g for g in launcher.games if g['id'] not in dlcs]
-            
+
 write_files(categories, launchers, collections)
