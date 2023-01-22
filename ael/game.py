@@ -57,6 +57,7 @@ class Game(OrderedDict):
 
         self['s_manual'] = get_first_path(lb_game.search_manuals())
         self['s_trailer'] = get_first_path(lb_game.search_trailers())
+        self['non_blocking'] = True
 
         if '://' in self.rom.path:
             uri = self.rom.path
@@ -66,6 +67,8 @@ class Game(OrderedDict):
                 self['altarg'] = params
                 self['romext'] = 'lnk'
                 self['filename'] = '.'
+                self['non_blocking'] = False
+                self['windows_close_fds'] = True
         elif lb_game.dosbox_conf:
             self['altapp'] = dosbox_exe
             self['altarg'] = dosbox_args.format(lb_game.dosbox_conf)
@@ -73,9 +76,12 @@ class Game(OrderedDict):
             if lb_game.additional_applications:
                 # TODO: check if there should be more than one additional application
                 for app_id, app in lb_game.additional_applications.items():
-                    self['altapp'] = app['path']
-                    self['altarg'] = app['command_line']
+                    if app['path']:
+                        self['altapp'] = app['path']
+                        self['altarg'] = app['command_line']
+                        self['filename'] = '.'
             else:
                 self['altapp'] = self['filename']
-                self['altarg'] = ' '
+                self['altarg'] = lb_game.command_line
+                self['filename'] = '.'
         self['disks'] = [f.absolute for f in lb_game.disks]

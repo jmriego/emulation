@@ -39,4 +39,14 @@ launchers.launchers[oculus_launcher.id] = oculus_launcher
 for launcher in launchers:
     launcher.games = [g for g in launcher.games if g['id'] not in dlcs]
 
+    # this will make everything run with cmd /b in AEL
+    launcher['romext'] = 'lnk'
+    for game in launcher.games:
+        game['romext'] = 'lnk'
+
+        if game.get('m_name') in ["Blasphemous", "Cyberpunk 2077",  "Dead Space", "Alan Wake", "Beetlejuice"]:
+            import pprint
+            pprint.pprint({k: v for k, v in game.items() if k in ['altapp', 'altarg', 'romext', 'm_name', 'filename']})
+
 write_files(categories, launchers, collections)
+input('Press enter to exit...')

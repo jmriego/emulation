@@ -7,6 +7,7 @@ class Game:
         self.id = get_attribute_cdata(game_xml_node, 'ID')
         self.name = get_attribute_cdata(game_xml_node, 'Title')
         self.rom = File(get_attribute_cdata(game_xml_node, 'ApplicationPath'), lbdir)
+        self.command_line = get_attribute_cdata(game_xml_node, 'CommandLine')
         self.emulator = get_attribute_cdata(game_xml_node, 'Emulator', 'Executables')
         self.notes = get_attribute_cdata(game_xml_node, 'Notes')
         self.star_rating = get_attribute_cdata(game_xml_node, 'StarRating')

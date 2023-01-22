@@ -49,7 +49,6 @@ class Collection(OrderedDict):
         game['args_extra'] = []
         game['fav_status'] = 'OK'
         game['launcherID'] = launcher.id
-        game['non_blocking'] = False
 
         self.games.append(game)
 
