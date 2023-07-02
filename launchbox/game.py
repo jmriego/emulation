@@ -42,7 +42,9 @@ class Game:
             self.additional_applications[additional_application_id] = {
                 'name': get_attribute_cdata(additional_xml_node, 'Name'),
                 'path': application_path,
-                'command_line': get_attribute_cdata(additional_xml_node, 'CommandLine')}
+                'command_line': get_attribute_cdata(additional_xml_node, 'CommandLine'),
+                'autorun_before': get_attribute_cdata(additional_xml_node, 'AutoRunBefore') == "true",
+                'autorun_after': get_attribute_cdata(additional_xml_node, 'AutoRunAfter') == "true"}
 
     def search_images(self, image_type):
         return self.resources_catalog.search_images(image_type, game=self)

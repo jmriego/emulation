@@ -2,6 +2,7 @@ from collections import OrderedDict
 from . import GAME_RESOURCE_TYPES, get_first_path
 import os
 import shlex
+import subprocess
 import winreg
 
 
@@ -76,12 +77,29 @@ class Game(OrderedDict):
             if lb_game.additional_applications:
                 # TODO: check if there should be more than one additional application
                 for app_id, app in lb_game.additional_applications.items():
-                    if app['path']:
+                    if app['path'] and not app['autorun_before'] and not app['autorun_after']:
                         self['altapp'] = app['path']
                         self['altarg'] = app['command_line']
                         self['filename'] = '.'
-            else:
-                self['altapp'] = self['filename']
-                self['altarg'] = lb_game.command_line
-                self['filename'] = '.'
+                else:
+                    self['altapp'] = self['filename']
+                    self['altarg'] = lb_game.command_line
+                    self['filename'] = '.'
         self['disks'] = [f.absolute for f in lb_game.disks]
+
+        if lb_game.additional_applications:
+            before = []
+            after = []
+            for app_id, app in lb_game.additional_applications.items():
+                if app['path']:
+                    if app['autorun_before']:
+                        before.append(f'Start {app["path"]} {app["command_line"]}')
+                    elif app['autorun_after']:
+                        after.append(f'Start {app["path"]} {app["command_line"]}')
+            if before or after:
+                if self['altapp']:
+                    game_command = 'Start "{}" "{}"'.format(self['altapp'], self['altarg'])
+                else:
+                    game_command = 'Start "{}" "{}"'.format(lb_game.emulator.command_line, self['filename'])
+                self['altapp'] = subprocess.run(['where', 'powershell.exe'], capture_output=True, text=True).stdout.strip('\n')
+                self['altarg'] = "'" + ';'.join(before + [game_command] + after) + "'"
