@@ -11,20 +11,24 @@ from ael.collection import CollectionsCatalog as AELCollectionsCatalog
 from files.file import File
 from launchbox.catalog import LaunchBox
 
-logging.basicConfig(filename='LaunchBox2AEL.log',
-                    filemode='w',
-                    format='%(asctime)s %(name)s %(levelname)s %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S',
-                    level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-console = logging.StreamHandler(sys.stdout)
-console.setLevel(logging.INFO)
-console.setFormatter(logging.Formatter('%(levelname)-7s %(message)s'))
-logging.getLogger('').addHandler(console)
-
-logger.info('Reading configuration from config.ini')
 config = configparser.RawConfigParser()
 config.read(File([os.path.dirname(__file__), 'config.ini']).absolute)
+
+debug_file = config.get('debug', 'file', fallback=None)
+
+if debug_file:
+    logging.basicConfig(filename='LaunchBox2AEL.log',
+                        filemode='w',
+                        format='%(asctime)s %(name)s %(levelname)s %(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S',
+                        level=logging.DEBUG)
+    console = logging.StreamHandler(sys.stdout)
+    console.setLevel(logging.INFO)
+    logging.getLogger('').addHandler(console)
+else:
+    logging.basicConfig(level=logging.INFO)
+
+logger = logging.getLogger(__name__)
 
 LBDIR = config.get('launchbox', 'dir')
 if not File([LBDIR, 'Launchbox.exe']).exists():

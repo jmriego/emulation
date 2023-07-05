@@ -66,7 +66,7 @@ class GamesCatalog:
     def __init__(self, platforms_xml_dir, platforms, emulators, lbdir, resources_catalog):
         games = {}
         for platform in platforms:
-            print('Generating list of {} games '.format(platform.name))
+            logger.info('Generating list of %s games', platform.name)
             games_xml = untangle.parse(File([platforms_xml_dir, '{}.xml'.format(platform.name)]).absolute)
             for game_xml_node in games_xml.LaunchBox.Game:
                 logger.debug('Processing next game')
