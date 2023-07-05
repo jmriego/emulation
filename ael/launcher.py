@@ -1,11 +1,13 @@
 from hashlib import md5
 from collections import OrderedDict
+import logging
 import os
 from launchbox.resource import clean_filename
 from . import get_first_path
 import time
 from ael.game import Game
 
+logger = logging.getLogger(__name__)
 
 # launcher is the combination of platform and either an emulator id or executables
 class Launcher(OrderedDict):

@@ -1,4 +1,7 @@
+import logging
 import untangle
+
+logger = logging.getLogger(__name__)
 
 
 class Platform:
@@ -18,8 +21,10 @@ class PlatformsCatalog:
     def __init__(self, platform_xml_file, platform_categories_xml_file, categories, resources_catalog):
         platforms = {}
         platform_xml = untangle.parse(platform_xml_file)
+        logger.info('Reading the list of Platforms')
         for platform_xml_node in platform_xml.LaunchBox.Platform:
             platform = Platform(platform_xml_node, resources_catalog)
+            logger.info('Adding the platform: %s', platform.name)
             platforms[platform.name] = platform
         self.platforms = platforms
 

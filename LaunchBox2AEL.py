@@ -6,9 +6,18 @@ from ael.category import Category as AELCategory
 from ael.collection import CollectionsCatalog as AELCollectionsCatalog
 from lxml import etree as ET
 import json
+import logging
 import time
 import configparser
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename='LaunchBox2AEL.log',
+                    filemode='a',
+                    format='%(asctime)s %(name)s %(levelname)s %(message)s',
+                    datefmt='%H:%M:%S',
+                    level=logging.WARN)
+
+logger.info('Reading configuration from config.ini')
 config = configparser.RawConfigParser()
 config.read(File([os.path.dirname(__file__), 'config.ini']).absolute)
 
@@ -24,6 +33,7 @@ DOSBOX_EXE = config.get('dosbox', 'exe')
 DOSBOX_ARGS = config.get('dosbox', 'args')
 
 os.chdir(LBDIR)
+logger.info('Starting to read LaunchBox data from %s', LBDIR)
 launchbox = LaunchBox(LBDIR)
 
 
