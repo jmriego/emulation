@@ -35,11 +35,11 @@ class PlatformsCatalog:
             # some nodes in parents.xml file seem to have incomplete information. ignore them
             try:
                 platform_name = getattr(parent_xml, 'PlatformName').cdata
-            except AttributeError:
+                category_name = get_attribute_cdata(parent_xml, 'ParentPlatformCategoryName')
+                self.platforms[platform_name].category = categories.search(category_name)
+            except (AttributeError, KeyError):
                 logger.warn('This category mapping doesnt seem to include a platform')
                 continue
-            category_name = get_attribute_cdata(parent_xml, 'ParentPlatformCategoryName')
-            self.platforms[platform_name].category = categories.search(category_name)
             logger.debug('Assigned platform %s to category %s', platform_name, category_name)
 
     def __iter__(self):
