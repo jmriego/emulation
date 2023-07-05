@@ -9,6 +9,7 @@ from ael.game import Game
 
 logger = logging.getLogger(__name__)
 
+
 # launcher is the combination of platform and either an emulator id or executables
 class Launcher(OrderedDict):
     def __init__(self, lb_platform, emulator, aeldir):
@@ -72,6 +73,7 @@ class Launcher(OrderedDict):
                 ('path_manual', "{}\\manuals".format(assets_dir)),
                 ('path_trailer', "{}\\trailers".format(assets_dir))
             ))
+        logger.debug('Successfully initialized AEL launcher %s', self.name)
 
     def add_game(self, game, dosbox_exe=None, dosbox_args=None):
         ael_game = Game(game, dosbox_exe, dosbox_args)
@@ -114,6 +116,7 @@ class Launcher(OrderedDict):
 class LaunchersCatalog:
     def __init__(self, games, dosbox_exe=None, dosbox_args=None, aeldir=None):
         self.launchers = {}
+        logger.info('Generating list of AEL launchers from the games that use them')
         for game in games:
             launcher = Launcher(game.platform, game.emulator, aeldir)
             try:
@@ -122,6 +125,7 @@ class LaunchersCatalog:
                 launcher.add_game(game, dosbox_exe, dosbox_args)
                 self.launchers[launcher.id] = launcher
 
+        logger.info('Generating count of games for each AEL launcher')
         platform_launcher_count = {}
         for launcher in self.launchers.values():
             platform_launcher_count.setdefault(launcher.platform.name, list()).append(launcher)
@@ -129,8 +133,8 @@ class LaunchersCatalog:
         for platform, launchers in platform_launcher_count.items():
             if len(launchers) > 1:
                 for launcher in launchers:
+                    logger.debug('Launcher %s renamed to %s to avoid duplication', launcher['m_name'], launcher.name)
                     launcher['m_name'] = launcher.name
-
 
     def __iter__(self):
         return iter(self.launchers.values())

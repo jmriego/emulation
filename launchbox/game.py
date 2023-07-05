@@ -1,5 +1,8 @@
+import logging
 import untangle
 from files.file import File
+
+logger = logging.getLogger(__name__)
 
 
 class Game:
@@ -30,6 +33,7 @@ class Game:
         self.resources_catalog = resources_catalog
         self.disks = []
         self.additional_applications = {}
+        logger.debug('Successfully initialized game %s', self.name)
 
     def add_application(self, additional_xml_node):
         use_emulator = get_attribute_cdata(additional_xml_node, 'UseEmulator').lower() == "true"
@@ -39,12 +43,14 @@ class Game:
             self.disks.append(File(application_path, self.rom.basedir))
         else:
             additional_application_id = get_attribute_cdata(additional_xml_node, 'Id')
-            self.additional_applications[additional_application_id] = {
+            additional_application = {
                 'name': get_attribute_cdata(additional_xml_node, 'Name'),
                 'path': application_path,
                 'command_line': get_attribute_cdata(additional_xml_node, 'CommandLine'),
                 'autorun_before': get_attribute_cdata(additional_xml_node, 'AutoRunBefore') == "true",
                 'autorun_after': get_attribute_cdata(additional_xml_node, 'AutoRunAfter') == "true"}
+            self.additional_applications[additional_application_id] = additional_application
+            logger.debug('Successfully added additional application %s', additional_application['name'])
 
     def search_images(self, image_type):
         return self.resources_catalog.search_images(image_type, game=self)
@@ -63,13 +69,15 @@ class GamesCatalog:
             print('Generating list of {} games '.format(platform.name))
             games_xml = untangle.parse(File([platforms_xml_dir, '{}.xml'.format(platform.name)]).absolute)
             for game_xml_node in games_xml.LaunchBox.Game:
+                logger.debug('Processing next game')
                 game = Game(game_xml_node, platform, lbdir, resources_catalog)
                 try:
                     game.emulator = emulators[game.emulator]
                     games[game.id] = game
                 except KeyError:
-                    print('Game {} does not have a valid emulator configuration'.format(game.name))
+                    logger.warn('Game %s does not have a valid emulator configuration', game.name)
             for additional_xml_node in getattr(games_xml.LaunchBox, 'AdditionalApplication', []):
+                logger.debug('Processing next additional application')
                 game_id = get_attribute_cdata(additional_xml_node, 'GameID')
                 games[game_id].add_application(additional_xml_node)
             self.games = games

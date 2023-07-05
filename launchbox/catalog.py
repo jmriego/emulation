@@ -1,3 +1,4 @@
+import logging
 from files.file import File
 from launchbox.emulator import EmulatorCatalog
 from launchbox.category import CategoriesCatalog
@@ -6,6 +7,7 @@ from launchbox.game import GamesCatalog
 from launchbox.playlist import PlaylistsCatalog
 from launchbox.resource import ResourcesCatalog
 
+logger = logging.getLogger(__name__)
 
 class LaunchBox:
     def __init__(self, lb_dir):
@@ -26,6 +28,7 @@ class LaunchBox:
     @property
     def emulators(self):
         if self._emulators is None:
+            logger.debug('Processing LaunchBox emulators')
             self._emulators = EmulatorCatalog(
                     File([self.data_dir, "Emulators.xml"]).absolute,
                     self.base_dir)
@@ -34,6 +37,7 @@ class LaunchBox:
     @property
     def categories(self):
         if self._categories is None:
+            logger.debug('Processing LaunchBox categories')
             # platforms.xml has the categories inside
             self._categories = CategoriesCatalog(
                     File([self.data_dir, "Platforms.xml"]).absolute,
@@ -43,6 +47,7 @@ class LaunchBox:
     @property
     def platforms(self):
         if self._platforms is None:
+            logger.debug('Processing LaunchBox platforms')
             # platforms.xml has the categories inside
             # parents.xml has the relationships between platforms and categories
             self._platforms = PlatformsCatalog(
@@ -55,6 +60,7 @@ class LaunchBox:
     @property
     def games(self):
         if self._games is None:
+            logger.debug('Processing LaunchBox games')
             # the games are inside the Platforms folder
             # one .xml file per platform with the games inside
             self._games = GamesCatalog(
@@ -68,6 +74,7 @@ class LaunchBox:
     @property
     def playlists(self):
         if self._playlists is None:
+            logger.debug('Processing LaunchBox playlists')
             self._playlists = PlaylistsCatalog(
                     self.playlists_dir,
                     self.games)
@@ -76,6 +83,7 @@ class LaunchBox:
     @property
     def resources(self):
         if self._resources is None:
+            logger.debug('Processing LaunchBox resources')
             self._resources = ResourcesCatalog(
                     self.images_dir,
                     self.manuals_dir,

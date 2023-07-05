@@ -1,7 +1,10 @@
+import logging
 import unicodedata
 from files.file import find_files
 from collections import namedtuple
 from . import BAD_CHARS_IN_FILENAME
+
+logger = logging.getLogger(__name__)
 
 
 def clean_filename(filename):
@@ -40,6 +43,8 @@ class ResourcesCatalog:
         # the files use a naming convention so we can later query them using
         # platform names, game names, etc.
 
+
+        logger.debug('Processing images in %s', images_dir)
         for f in find_files(images_dir, '*.*', as_file=True):
             if f.split_path[0] == 'Platform Categories' and len(f.split_path) >= 4:
                 self.add_resource(
@@ -54,11 +59,13 @@ class ResourcesCatalog:
                         f,
                         GameSearch(f.split_path[0], f.rootname_nosuffix, f.split_path[1]))
 
+        logger.debug('Processing manuals in %s', manuals_dir)
         for f in find_files(manuals_dir, '*.*', as_file=True):
             if len(f.split_path) >= 2:
                 self.add_resource(f,
                         GameSearch(f.split_path[0], f.rootname_nosuffix, MANUAL_RESOURCE_TYPE))
 
+        logger.debug('Processing trailers in %s', trailers_dir)
         for f in find_files(trailers_dir, '*.*', as_file=True):
             if len(f.split_path) >= 2:
                 self.add_resource(f,
