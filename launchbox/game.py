@@ -79,7 +79,10 @@ class GamesCatalog:
             for additional_xml_node in getattr(games_xml.LaunchBox, 'AdditionalApplication', []):
                 logger.debug('Processing next additional application')
                 game_id = get_attribute_cdata(additional_xml_node, 'GameID')
-                games[game_id].add_application(additional_xml_node)
+                try:
+                    games[game_id].add_application(additional_xml_node)
+                except KeyError:
+                    logger.warn('Trying to add additional application for a game id not found: %s', game_id)
             self.games = games
 
     def __iter__(self):

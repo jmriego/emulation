@@ -70,20 +70,19 @@ def write_files(categories, launchers, collections):
     control = ET.SubElement(root, "control")
     ET.SubElement(control, "update_timestamp").text = str(time.time())
 
-    logger.info('Writing AEL categories')
     for category in categories:
         category_xml = ET.SubElement(root, "category")
         for key, value in AELCategory(category).items():
             ET.SubElement(category_xml, key).text = value
 
-    tree = ET.ElementTree(root)
-    tree.write(os.path.join(AELDIR, 'categories.xml'), pretty_print=True)
-
-    logger.info('Writing AEL launchers')
     for launcher in launchers:
         launcher_xml = ET.SubElement(root, "launcher")
         for key, value in launcher.items():
             ET.SubElement(launcher_xml, key).text = value
+
+    logger.info('Writing AEL categories file')
+    tree = ET.ElementTree(root)
+    tree.write(os.path.join(AELDIR, 'categories.xml'), pretty_print=True)
 
     ###############################################
     # generate AEL single launchers xml
