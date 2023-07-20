@@ -1,5 +1,8 @@
-from files.file import File
+import logging
 import untangle
+from files.file import File
+
+logger = logging.getLogger(__name__)
 
 
 class Emulator:
@@ -13,6 +16,7 @@ class Emulator:
         self.args = {}
         command_line = get_attribute_cdata(emulator_xml_node, 'CommandLine')
         self.add_platform_parameters(platform='default', command_line=command_line)
+        logger.debug('Successfully initialized emulator %s', self.name)
 
     def add_platform_parameters(self, emulatorplatform_xml_node=None, platform=None, command_line=None):
         if emulatorplatform_xml_node:
@@ -22,11 +26,13 @@ class Emulator:
             if command_line == '':
                 return
 
-        self.args[platform.lower()] = (
+        args =  (
                 command_line
                 + (' ' if self.space else '')
                 + ('"{}"' if self.quotes else '{}')
                 ).lstrip()
+        self.args[platform.lower()] = args
+        logger.debug('Parameters for emulator %s platform %s are: %s', self.name, platform, args)
 
     def command_line(self, platform):
         return self.args.get(platform.lower(), self.args['default'])
@@ -37,12 +43,14 @@ class EmulatorCatalog:
         emulators = {}
         emulator_xml = untangle.parse(emulator_xml_file)
         for emulator_xml_node in emulator_xml.LaunchBox.Emulator:
+            logger.debug('Processing next emulator')
             emulator = Emulator(emulator_xml_node, base_dir)
             emulators[emulator.id] = emulator
 
         emulators['Executables'] = Emulator(None, base_dir, 'Executables', r'C:\Emulators\default_launcher.bat', 'Executables')
 
         for emulatorplatform_xml_node in getattr(emulator_xml.LaunchBox, 'EmulatorPlatform', []):
+            logger.debug('Processing next emulator platform')
             emulator_id = get_attribute_cdata(emulatorplatform_xml_node, 'Emulator')
             emulators[emulator_id].add_platform_parameters(emulatorplatform_xml_node)
         self.emulators = emulators

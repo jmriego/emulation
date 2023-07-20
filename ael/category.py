@@ -1,5 +1,8 @@
+import logging
 from collections import OrderedDict
 from . import get_first_path
+
+logger = logging.getLogger(__name__)
 
 
 class Category(OrderedDict):
@@ -26,3 +29,4 @@ class Category(OrderedDict):
             ('s_clearlogo', get_first_path(lb_category.search_images('Clear Logo'))),
             ('s_trailer', "")
         ))
+        logger.debug('Successfully initialized the AEL category %s', self['m_name'])

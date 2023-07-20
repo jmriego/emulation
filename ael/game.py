@@ -1,9 +1,12 @@
-from collections import OrderedDict
-from . import GAME_RESOURCE_TYPES, get_first_path
+import logging
 import os
 import shlex
 import subprocess
 import winreg
+from collections import OrderedDict
+from . import GAME_RESOURCE_TYPES, get_first_path
+
+logger = logging.getLogger(__name__)
 
 
 def get_associated_app(uri):
@@ -22,6 +25,8 @@ def get_associated_app(uri):
     except OSError:
         app = None
         params = None
+
+    logger.debug('Associated app for %s is %s, params %s', uri, app, params)
     return app, params
 
 
@@ -86,8 +91,10 @@ class Game(OrderedDict):
                     self['altarg'] = lb_game.command_line
                     self['filename'] = '.'
         self['disks'] = [f.absolute for f in lb_game.disks]
+        logger.debug('Initialized AEL game %s', self['m_name'])
 
         if lb_game.additional_applications:
+            logger.debug('Adding additional applications to AEL game %s', self['m_name'])
             before = []
             after = []
             for app_id, app in lb_game.additional_applications.items():
@@ -103,3 +110,4 @@ class Game(OrderedDict):
                     game_command = 'Start "{}" "{}"'.format(lb_game.emulator.command_line, self['filename'])
                 self['altapp'] = subprocess.run(['where', 'powershell.exe'], capture_output=True, text=True).stdout.strip('\n')
                 self['altarg'] = "'" + ';'.join(before + [game_command] + after) + "'"
+            logger.debug('AEL game %s is launched as %s %s', self['m_name'], self['altapp'], self['altarg'])

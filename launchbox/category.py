@@ -1,5 +1,8 @@
+import logging
 import untangle
 from hashlib import md5
+
+logger = logging.getLogger(__name__)
 
 
 class Category:
@@ -8,6 +11,7 @@ class Category:
         self.name = category_xml_node.Name.cdata
         self.id = md5(self.name.encode()).hexdigest()
         self.notes = category_xml_node.Notes.cdata
+        logger.debug('Successfully initialized the category %s', self.name)
 
     def search_images(self, image_type):
         return self.resources_catalog.search_images(image_type, category=self)
@@ -18,6 +22,7 @@ class CategoriesCatalog:
         categories = {}
         category_xml = untangle.parse(category_xml_file)
         for category_xml_node in category_xml.LaunchBox.PlatformCategory:
+            logger.debug('Read next category')
             category = Category(category_xml_node, resources_catalog)
             categories[category.id] = category
 

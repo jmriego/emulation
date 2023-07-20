@@ -1,10 +1,13 @@
+import logging
+import time
 from hashlib import md5
 from collections import OrderedDict
 import os
 from launchbox.resource import clean_filename
 from . import get_first_path
-import time
 from ael.game import Game
+
+logger = logging.getLogger(__name__)
 
 
 # launcher is the combination of platform and either an emulator id or executables
@@ -32,6 +35,7 @@ class Collection(OrderedDict):
                 ('s_clearlogo', ""),
                 ('s_trailer', "")
             ))
+        logger.debug('Successfully initialized the AEL collection %s', self['m_name'])
 
     def add_game(self, game):
         launcher = game.launcher
@@ -51,6 +55,7 @@ class Collection(OrderedDict):
         game['launcherID'] = launcher.id
 
         self.games.append(game)
+        logger.debug('Assigned game %s to collection %s', game['m_name'], self['m_name'])
 
 
 class CollectionsCatalog:
@@ -59,6 +64,7 @@ class CollectionsCatalog:
         self.games = {g['id']: g for launcher in launchers for g in launcher.games}
 
         for playlist in playlists:
+            logger.info('Generating AEL collection %s', playlist.name)
             collection = Collection(playlist)
             for game in playlist.games:
                 g = self.games[game.id]
