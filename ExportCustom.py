@@ -10,6 +10,7 @@ from win32com.client import Dispatch
 # Fix Oculus launcher
 playlists = launchbox.playlists
 dlcs = ['JayDLC1']
+oculus_launcher = None
 for playlist in playlists:
     if playlist.name == 'DLC':
         dlcs += [g.id for g in playlist.games]
@@ -34,7 +35,8 @@ for playlist in playlists:
 
 categories, launchers, collections = generate_data()
 # Add Oculus Launcher
-launchers.launchers[oculus_launcher.id] = oculus_launcher
+if oculus_launcher:
+    launchers.launchers[oculus_launcher.id] = oculus_launcher
 # Remove DLCs from the catalog
 for launcher in launchers:
     launcher.games = [g for g in launcher.games if g['id'] not in dlcs]
