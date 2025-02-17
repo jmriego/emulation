@@ -19,6 +19,7 @@ class Playlist:
         try:
             playlist_nodes = playlist_xml.LaunchBox.PlaylistGame
         except AttributeError:
+            logger.debug('No games found on playlist %s', playlist_xml_file)
             return None
 
         for game_xml_node in playlist_nodes:
