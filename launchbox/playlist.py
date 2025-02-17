@@ -16,7 +16,12 @@ class Playlist:
             logger.debug('Adding games to playlist %s', self.name)
 
         self.games = []
-        for game_xml_node in playlist_xml.LaunchBox.PlaylistGame:
+        try:
+            playlist_nodes = playlist_xml.LaunchBox.PlaylistGame
+        except AttributeError:
+            return None
+
+        for game_xml_node in playlist_nodes:
             logger.debug('Processing next playlist game')
             game_id = get_attribute_cdata(game_xml_node, 'GameId')
             try:
@@ -34,7 +39,8 @@ class PlaylistsCatalog:
         for f in find_files(playlist_xml_dir, '*.xml'):
             logger.debug('Processing next emulator platform in file %s', f)
             playlist = Playlist(f, games_catalog)
-            self.playlists[playlist.id] = playlist
+            if playlist:
+                self.playlists[playlist.id] = playlist
 
     def __iter__(self):
         return iter(self.playlists.values())
