@@ -64,6 +64,7 @@ class Game(OrderedDict):
         self['s_manual'] = get_first_path(lb_game.search_manuals())
         self['s_trailer'] = get_first_path(lb_game.search_trailers())
         self['non_blocking'] = True
+        self['toggle_window'] = False
 
         if '://' in self.rom.path:
             uri = self.rom.path
@@ -71,7 +72,7 @@ class Game(OrderedDict):
             if app and params:
                 self['altapp'] = app
                 self['altarg'] = params
-                self['romext'] = 'lnk'
+                self['romext'] = 'exe'
                 self['filename'] = '.'
                 self['non_blocking'] = False
                 self['windows_close_fds'] = True
@@ -79,17 +80,16 @@ class Game(OrderedDict):
             self['altapp'] = dosbox_exe
             self['altarg'] = dosbox_args.format(lb_game.dosbox_conf)
         elif lb_game.emulator.id == 'Executables':
-            if lb_game.additional_applications:
-                # TODO: check if there should be more than one additional application
-                for app_id, app in lb_game.additional_applications.items():
-                    if app['path'] and not app['autorun_before'] and not app['autorun_after']:
-                        self['altapp'] = app['path']
-                        self['altarg'] = app['command_line']
-                        self['filename'] = '.'
-                else:
-                    self['altapp'] = self['filename']
-                    self['altarg'] = lb_game.command_line
+            # TODO: check if there should be more than one additional application
+            for app_id, app in lb_game.additional_applications.items():
+                if app['path'] and not app['autorun_before'] and not app['autorun_after']:
+                    self['altapp'] = app['path']
+                    self['altarg'] = app['command_line']
                     self['filename'] = '.'
+            else:
+                self['altapp'] = self['filename']
+                self['altarg'] = lb_game.command_line
+                self['filename'] = '.'
         self['disks'] = [f.absolute for f in lb_game.disks]
         logger.debug('Initialized AEL game %s', self['m_name'])
 
